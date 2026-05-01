@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { startWebGL } from './webgl_main.js'
+import { startWebGL } from './webgl_main.ts'
 import './css/loading1.css'
 
 onMounted(() => {

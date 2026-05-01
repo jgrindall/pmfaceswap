@@ -10,7 +10,16 @@
       "Bash(Remove-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\common\\\\util_texture.js\" -Force)",
       "Bash(Write-Output \"deleted\")",
       "Bash(npm run *)",
-      "Bash(curl -s http://localhost:5173/)"
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(python3 -c \"import json,subprocess; d=json.loads\\(open\\('node_modules/@vue/tsconfig/tsconfig.dom.json'\\).read\\(\\)\\); print\\(json.dumps\\(d.get\\('compilerOptions',{}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c \"import json; raw=open\\('node_modules/@vue/tsconfig/tsconfig.json'\\).read\\(\\); import re; raw=re.sub\\(r'//[^\\\\n]*','',raw\\); d=json.loads\\(raw\\); print\\(json.dumps\\(d.get\\('compilerOptions',{}\\), indent=2\\)\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(powershell -Command \"Get-Content 'node_modules\\\\@vue\\\\tsconfig\\\\tsconfig.json' | Select-String 'moduleResolution|module'\")",
+      "PowerShell(Rename-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\scene2d.js\" \"scene2d.ts\")",
+      "PowerShell(Rename-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\render_facemesh.js\" \"render_facemesh.ts\")",
+      "PowerShell(Rename-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\webgl_main.js\" \"webgl_main.ts\")",
+      "Bash(npx vue-tsc *)",
+      "Bash(echo \"exit: $?\")"
     ],
     "additionalDirectories": [
       "c:\\workspace\\pmfaceswap\\src"

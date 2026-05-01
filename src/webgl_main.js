@@ -1,7 +1,4 @@
-/* ------------------------------------------------ *
- * The MIT License (MIT)
- * Copyright (c) 2020 terryky1220@gmail.com
- * ------------------------------------------------ */
+
 import Stats from 'stats.js';
 import { Scene2D } from './scene2d.js';
 import { FaceMeshRenderer } from './render_facemesh.js';
@@ -176,9 +173,8 @@ export function startWebGL()
                 mask_updated     = true;
             }
 
-            /* reset framebuffer/viewport after TF.js GPU work */
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.viewport(0, 0, win_w, win_h);
+            /* reset GL state after TF.js GPU work */
+            scene2d.renderer.resetState();
         }
 
 

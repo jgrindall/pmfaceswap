@@ -1,8 +1,6 @@
-/* ------------------------------------------------ *
- * The MIT License (MIT)
- * Copyright (c) 2020 terryky1220@gmail.com
- * ------------------------------------------------ */
+*/
 import * as THREE from 'three';
+import { makeAttr } from './utils';
 
 const LANDMARK_COUNT = 468;
 const RENDER_ORDER   = 1;   /* between background (0) and overlay (2+) */
@@ -69,8 +67,8 @@ export class FaceMeshRenderer
             side:        THREE.DoubleSide,
         });
 
-        this._meshFull = new THREE.Mesh(this._makeGeo(s_face_tris),         this._mat);
-        this._meshEyes = new THREE.Mesh(this._makeGeo(s_face_wo_eyes_tris), this._mat);
+        this._meshFull = new THREE.Mesh(this.makeGeo(s_face_tris),         this._mat);
+        this._meshEyes = new THREE.Mesh(this.makeGeo(s_face_wo_eyes_tris), this._mat);
         this._meshFull.renderOrder = RENDER_ORDER;
         this._meshEyes.renderOrder = RENDER_ORDER;
         this.reset();
@@ -78,12 +76,11 @@ export class FaceMeshRenderer
         scene.add(this._meshEyes);
     }
 
-    _makeGeo (tris)
-    {
+    makeGeo (tris){
         const geo = new THREE.BufferGeometry();
         geo.setAttribute('position', this._posAttr);
         geo.setAttribute('uv',       this._uvAttr);
-        geo.setAttribute('vtxalpha', makeAlphaAttr());
+        geo.setAttribute('vtxalpha', makeAttr(LANDMARK_COUNT, s_face_contour_idx));
         geo.setIndex(new THREE.BufferAttribute(new Uint16Array(tris), 1));
         return geo;
     }
