@@ -3,7 +3,7 @@
  * Copyright (c) 2019 terryky1220@gmail.com
  * ------------------------------------------------ */
 import { GLUtil } from './util_shader.js';
-import { matrix_identity, matrix_translate, matrix_rotate, matrix_scale, matrix_mult } from './util_matrix.js';
+import { Matrix4, Vector3 } from 'three';
 var r2d = {};
 export { r2d };
 r2d.tparam = {};
@@ -100,16 +100,16 @@ var tarray3 = [
     0.0, 1.0,   //    |     |
     0.0, 0.0 ]; //  2 +-----+ 0
 
-var s_matprj = [
-     0.0, 0.0, 0.0, 0.0,
-     0.0, 0.0, 0.0, 0.0,
-     0.0, 0.0, 0.0, 0.0,
-    -1.0, 1.0, 0.0, 1.0];
+const s_matprj = new Matrix4();
 
 r2d.set_projection_matrix = function (w, h)
 {
-    s_matprj[0] =  2.0 / w;
-    s_matprj[5] = -2.0 / h;
+    s_matprj.set(
+        2/w,  0,    0, -1,
+        0,   -2/h,  0,  1,
+        0,    0,    0,  0,
+        0,    0,    0,  1
+    );
 }
 
 r2d.init_2d_render = function (gl, w, h)
@@ -146,7 +146,7 @@ r2d.draw_2d_texture_in = function (gl)
     let h     = r2d.tparam.h;
     let rot   = r2d.tparam.rot;
     let sobj  = r2d.sobj[ttype];
-    let matrix = new Array(16);
+    const matrix = new Matrix4();
     let uv    = tarray0;
 
     gl.useProgram (sobj.program);
@@ -196,20 +196,19 @@ r2d.draw_2d_texture_in = function (gl)
                               gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     }
 
-    matrix_identity (matrix);
-    matrix_translate (matrix, x, y, 0.0);
+    matrix.makeTranslation(x, y, 0);
     if (rot != 0)
     {
-        let px = r2d.tparam.px;
-        let py = r2d.tparam.py;
-        matrix_translate (matrix,  px,  py, 0.0);
-        matrix_rotate (matrix, rot, 0.0, 0.0, 1.0);
-        matrix_translate (matrix, -px, -py, 0.0);
+        const px = r2d.tparam.px;
+        const py = r2d.tparam.py;
+        matrix.multiply(new Matrix4().makeTranslation(px, py, 0));
+        matrix.multiply(new Matrix4().makeRotationZ(rot * Math.PI / 180));
+        matrix.multiply(new Matrix4().makeTranslation(-px, -py, 0));
     }
-    matrix_scale (matrix, w, h, 1.0);
-    matrix_mult (matrix, s_matprj, matrix);
+    matrix.scale(new Vector3(w, h, 1));
+    matrix.premultiply(s_matprj);
 
-    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, matrix);
+    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, matrix.elements);
     gl.uniform4fv (r2d.loc_color[ttype], r2d.tparam.color);
 
     gl.enableVertexAttribArray (sobj.loc_vtx);
@@ -295,7 +294,7 @@ r2d.draw_2d_rect_rot = function (gl, x, y, w, h, color, line_width, px, py, rot_
 {
     const ttype = 0;
     let sobj = r2d.sobj[ttype];
-    let matrix = new Array(16);
+    const matrix = new Matrix4();
 
     gl.useProgram (sobj.program);
     gl.uniform4fv (r2d.loc_color[ttype], color);
@@ -304,18 +303,16 @@ r2d.draw_2d_rect_rot = function (gl, x, y, w, h, color, line_width, px, py, rot_
     gl.blendFuncSeparate (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
                           gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-    matrix_identity (matrix);
     if (rot_degree != 0)
     {
-        let tx = x + px * w;
-        let ty = y + py * h;
-        matrix_translate (matrix,  tx,  ty, 0);
-        matrix_rotate (matrix, rot_degree, 0.0, 0.0, 1.0);
-        matrix_translate (matrix, -tx, -ty, 0);
+        const tx = x + px * w;
+        const ty = y + py * h;
+        matrix.makeTranslation(tx, ty, 0);
+        matrix.multiply(new Matrix4().makeRotationZ(rot_degree * Math.PI / 180));
+        matrix.multiply(new Matrix4().makeTranslation(-tx, -ty, 0));
     }
-
-    matrix_mult (matrix, s_matprj, matrix);
-    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, matrix);
+    matrix.premultiply(s_matprj);
+    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, matrix.elements);
 
     gl.lineWidth (line_width);
     let x1 = x;
@@ -373,7 +370,6 @@ r2d.draw_2d_fillcircle = function (gl, x, y, radius, color)
 {
     const ttype = 0;
     let sobj = r2d.sobj[ttype];
-    let matrix = new Array(16);
     let vtx    = new Array((CIRCLE_DIVNUM+2) * 2);
 
     gl.useProgram (sobj.program);
@@ -383,9 +379,7 @@ r2d.draw_2d_fillcircle = function (gl, x, y, radius, color)
     gl.blendFuncSeparate (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
                           gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-    matrix_identity (matrix);
-    matrix_mult (matrix, s_matprj, matrix);
-    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, matrix);
+    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, s_matprj.elements);
 
     vtx[0] = x;
     vtx[1] = y;
@@ -412,7 +406,6 @@ r2d.draw_2d_circle = function (gl, x, y, radius, color, line_width)
 {
     const ttype = 0;
     let sobj = r2d.sobj[ttype];
-    let matrix = new Array(16);
     let vtx    = new Array((CIRCLE_DIVNUM+2) * 2);
 
     gl.useProgram (sobj.program);
@@ -422,9 +415,7 @@ r2d.draw_2d_circle = function (gl, x, y, radius, color, line_width)
     gl.blendFuncSeparate (gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA,
                           gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
-    matrix_identity (matrix);
-    matrix_mult (matrix, s_matprj, matrix);
-    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, matrix);
+    gl.uniformMatrix4fv (r2d.loc_mtx[ttype], false, s_matprj.elements);
 
     gl.lineWidth (line_width);
 

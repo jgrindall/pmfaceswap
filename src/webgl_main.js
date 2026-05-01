@@ -7,8 +7,8 @@ import Stats from 'stats.js';
 import * as dat from 'dat.gui';
 import { GLUtil } from './common/util_texture.js';
 import { r2d } from './common/util_render2d.js';
-import { dbgstr, init_dbgstr } from './common/util_debugstr.js';
-import { pmeter } from './common/util_pmeter.js';
+let s_timing_info;
+let s_status_msg;
 import { init_facemesh_render, draw_facemesh_tri_tex, resize_facemesh_render } from './render_facemesh.js';
 
 let s_debug_log;
@@ -21,7 +21,6 @@ class GuiProperty {
         this.mask_alpha   = 0.7;
         this.flip_horizontal = true;
         this.mask_eye_hole = false;
-        this.draw_pmeter = false;
     }
 }
 const s_gui_prop = new GuiProperty();
@@ -175,6 +174,7 @@ function render_progress_bar (gl, current_phase, face_predictions, win_w, win_h)
     if (face_predictions.length > 0)
     {
         s_showme_count = 30;
+        s_status_msg.textContent = '';
         return;
     }
 
@@ -195,20 +195,11 @@ function render_progress_bar (gl, current_phase, face_predictions, win_w, win_h)
 
     if (current_phase < 2)
     {
-        x = win_w * 0.5 - 100;
-        y = win_h * 0.5 - 22;
-        let str = "Initializing[" + current_phase + "/2]...";
-        dbgstr.draw_dbgstr_ex (gl, str, x, y,    1, [0.0, 1.0, 1.0, 1.0], [0.2, 0.2, 0.2, 1.0]);
-        str = "Please wait a minute.";
-        dbgstr.draw_dbgstr_ex (gl, str, x, y+22, 1, [0.0, 1.0, 1.0, 1.0], [0.2, 0.2, 0.2, 1.0]);
-
+        s_status_msg.textContent = `Initializing[${current_phase}/2]... Please wait a minute.`;
         return;
     }
 
-    x = win_w * 0.5 - 100;
-    y = win_h * 0.5 - 11;
-    let str = " show me your face ";
-    dbgstr.draw_dbgstr_ex (gl, str, x, y, 1, [0.0, 1.0, 1.0, 1.0], [0.2, 0.2, 0.2, 1.0]);
+    s_status_msg.textContent = 'show me your face';
 }
 
 
@@ -218,8 +209,6 @@ function on_resize (gl)
     let h = gl.canvas.height;
 
     gl.viewport (0, 0, w, h);
-    pmeter.resize (gl, w, h, h - 100);
-    dbgstr.resize_viewport (gl, w, h);
     r2d.resize_viewport (gl, w, h);
     resize_facemesh_render (gl, w, h);
 }
@@ -248,7 +237,6 @@ init_gui ()
     gui.add (s_gui_prop, 'mask_alpha', 0.0, 1.0);
     gui.add (s_gui_prop, 'flip_horizontal');
     gui.add (s_gui_prop, 'mask_eye_hole');
-    gui.add (s_gui_prop, 'draw_pmeter');
 }
 
 
@@ -316,8 +304,8 @@ export function startWebGL()
     r2d.init_2d_render (gl, win_w, win_h);
     init_facemesh_render (gl, win_w, win_h);
 
-    init_dbgstr (gl, win_w, win_h);
-    pmeter.init_pmeter (gl, win_w, win_h, win_h - 40);
+    s_timing_info = document.getElementById('timing-info');
+    s_status_msg  = document.getElementById('status-msg');
     const stats = init_stats ();
 
 
@@ -353,8 +341,6 @@ export function startWebGL()
     let prev_time_ms = performance.now();
     async function render (now)
     {
-        pmeter.reset_lap (0);
-        pmeter.set_lap (0);
         s_debug_log.innerHTML = "tfjs.Backend = " + window.tf.getBackend() + "<br>"
 
         let cur_time_ms = performance.now();
@@ -454,16 +440,8 @@ export function startWebGL()
         /* --------------------------------------- *
          *  post process
          * --------------------------------------- */
-        if (s_gui_prop.draw_pmeter)
-        {
-            pmeter.draw_pmeter (gl, 0, 40);
-        }
-
-        let str = "Interval: " + interval_ms.toFixed(1) + " [ms]";
-        dbgstr.draw_dbgstr (gl, str, 10, 10);
-
-        str = "TF.js0  : " + time_invoke0.toFixed(1)  + " [ms]";
-        dbgstr.draw_dbgstr (gl, str, 10, 10 + 22 * 1);
+        s_timing_info.innerHTML =
+            `Interval: ${interval_ms.toFixed(1)} ms<br>TF.js: ${time_invoke0.toFixed(1)} ms`;
 
         stats.end();
         requestAnimationFrame (render);

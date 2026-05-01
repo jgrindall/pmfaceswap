@@ -3,7 +3,7 @@
  * Copyright (c) 2020 terryky1220@gmail.com
  * ------------------------------------------------ */
 import { GLUtil } from './common/util_texture.js';
-import { matrix_identity, matrix_mult } from './common/util_matrix.js';
+import { Matrix4 } from 'three';
 
 var render = {}
 
@@ -86,13 +86,12 @@ function init_facemesh_render (gl, w, h)
     render.loc_color   = gl.getUniformLocation (render.sobj.program, "u_color" );
     render.loc_alpha   = gl.getUniformLocation (render.sobj.program, "u_alpha" );
 
-    render.matPrj = [
-         0, 0, 0, 0,
-         0, 0, 0, 0,
-         0, 0, 0, 0,
-        -1, 1, 0, 1];
-    render.matPrj[0] =  2.0 / w;
-    render.matPrj[5] = -2.0 / h;
+    render.matPrj = new Matrix4().set(
+        2/w,  0,    0, -1,
+        0,   -2/h,  0,  1,
+        0,    0,    0,  0,
+        0,    0,    0,  1
+    );
 
     render.texid_dummy = GLUtil.create_image_texture (gl, "./assets/white.png");
 
@@ -113,8 +112,12 @@ function init_facemesh_render (gl, w, h)
 
 function resize_facemesh_render (gl, w, h)
 {
-    render.matPrj[0] =  2.0 / w;
-    render.matPrj[5] = -2.0 / h;
+    render.matPrj.set(
+        2/w,  0,    0, -1,
+        0,   -2/h,  0,  1,
+        0,    0,    0,  0,
+        0,    0,    0,  1
+    );
 }
 
 
@@ -122,8 +125,7 @@ function resize_facemesh_render (gl, w, h)
 function
 draw_facemesh_tri_tex (gl, texid, vtx, uv, color, drill_eye_hole, flip_h)
 {
-    let matMV     = new Array(16);
-    let matPMV    = new Array(16);
+    const matPMV  = new Matrix4();
 
     gl.enable (gl.CULL_FACE);
     if (flip_h)
@@ -161,10 +163,9 @@ draw_facemesh_tri_tex (gl, texid, vtx, uv, color, drill_eye_hole, flip_h)
         gl.vertexAttribPointer (render.loc_vtxalpha, 1, gl.FLOAT, false, 0, 0);
     }
 
-    matrix_identity (matMV);
-    matrix_mult (matPMV, render.matPrj, matMV);
+    matPMV.copy(render.matPrj);
 
-    gl.uniformMatrix4fv (render.loc_mtx_pmv, false, matPMV);
+    gl.uniformMatrix4fv (render.loc_mtx_pmv, false, matPMV.elements);
     gl.uniform3f (render.loc_color, color[0], color[1], color[2]);
     gl.uniform1f (render.loc_alpha, color[3]);
 
