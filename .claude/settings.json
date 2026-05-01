@@ -22,7 +22,8 @@
       "Bash(echo \"exit: $?\")"
     ],
     "additionalDirectories": [
-      "c:\\workspace\\pmfaceswap\\src"
+      "c:\\workspace\\pmfaceswap\\src",
+      "C:\\workspace\\pmfaceswap\\src"
     ]
   }
 }
