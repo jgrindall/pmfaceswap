@@ -2,7 +2,7 @@
  * The MIT License (MIT)
  * Copyright (c) 2020 terryky1220@gmail.com
  * ------------------------------------------------ */
-import { GLUtil } from './common/util_texture.js';
+import { GLUtil } from './common/util_shader.js';
 import { Matrix4 } from 'three';
 
 var render = {}
@@ -93,7 +93,16 @@ function init_facemesh_render (gl, w, h)
         0,    0,    0,  1
     );
 
-    render.texid_dummy = GLUtil.create_image_texture (gl, "./assets/white.png");
+    /* 1×1 white pixel — used as fallback texture */
+    {
+        const t = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, t);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([255,255,255,255]));
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        render.texid_dummy = t;
+    }
 
     render.vbo_vtx = gl.createBuffer();
     render.vbo_uv  = gl.createBuffer();

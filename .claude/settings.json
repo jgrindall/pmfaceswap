@@ -5,7 +5,12 @@
       "Read(//c//**)",
       "PowerShell(Write-Output \"=== face_landmark directory ===\" ; Get-ChildItem -Path \"c:\\\\workspace\\\\tfjs_webgl_app\\\\face_landmark\" -Recurse -Force | ForEach-Object { $_.FullName } | Sort-Object)",
       "PowerShell(Write-Output \"=== common directory ===\" ; Get-ChildItem -Path \"c:\\\\workspace\\\\tfjs_webgl_app\\\\common\" -Recurse -Force | ForEach-Object { $_.FullName } | Sort-Object)",
-      "Bash(npm install *)"
+      "Bash(npm install *)",
+      "Bash(Remove-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\common\\\\util_render2d.js\" -Force)",
+      "Bash(Remove-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\common\\\\util_texture.js\" -Force)",
+      "Bash(Write-Output \"deleted\")",
+      "Bash(npm run *)",
+      "Bash(curl -s http://localhost:5173/)"
     ],
     "additionalDirectories": [
       "c:\\workspace\\pmfaceswap\\src"
