@@ -4,7 +4,8 @@
       "Read(//c/workspace/**)",
       "Read(//c//**)",
       "PowerShell(Write-Output \"=== face_landmark directory ===\" ; Get-ChildItem -Path \"c:\\\\workspace\\\\tfjs_webgl_app\\\\face_landmark\" -Recurse -Force | ForEach-Object { $_.FullName } | Sort-Object)",
-      "PowerShell(Write-Output \"=== common directory ===\" ; Get-ChildItem -Path \"c:\\\\workspace\\\\tfjs_webgl_app\\\\common\" -Recurse -Force | ForEach-Object { $_.FullName } | Sort-Object)"
+      "PowerShell(Write-Output \"=== common directory ===\" ; Get-ChildItem -Path \"c:\\\\workspace\\\\tfjs_webgl_app\\\\common\" -Recurse -Force | ForEach-Object { $_.FullName } | Sort-Object)",
+      "Bash(npm install *)"
     ],
     "additionalDirectories": [
       "c:\\workspace\\pmfaceswap\\src"

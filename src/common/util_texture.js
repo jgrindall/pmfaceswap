@@ -2,6 +2,8 @@
  * The MIT License (MIT)
  * Copyright (c) 2020 terryky1220@gmail.com
  * ------------------------------------------------ */
+import { GLUtil } from './util_shader.js';
+export { GLUtil };
 
 
 GLUtil.create_texture = function (gl)
@@ -179,9 +181,6 @@ GLUtil.create_camera_texture = function (gl)
     video.autoplay = true;
     video.loop     = true;
 
-    navigator.mediaDevices = navigator.mediaDevices ||
-                             navigator.mozGetUserMedia
-                             navigator.webkitGetUserMedia;
     if (!navigator.mediaDevices)
     {
         alert('not supported navigator.mediaDevices');

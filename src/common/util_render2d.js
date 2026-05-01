@@ -2,7 +2,10 @@
  * The MIT License (MIT)
  * Copyright (c) 2019 terryky1220@gmail.com
  * ------------------------------------------------ */
+import { GLUtil } from './util_shader.js';
+import { matrix_identity, matrix_translate, matrix_rotate, matrix_scale, matrix_mult } from './util_matrix.js';
 var r2d = {};
+export { r2d };
 r2d.tparam = {};
 
 r2d.FLIP_V = 1;

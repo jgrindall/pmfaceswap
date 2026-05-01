@@ -2,7 +2,9 @@
  * The MIT License (MIT)
  * Copyright (c) 2019 terryky1220@gmail.com
  * ------------------------------------------------ */
+import { GLUtil } from './util_shader.js';
 var pmeter = {};
+export { pmeter };
 
 const PMETER_DPY_NUM     = 4;
 const PMETER_MAX_LAP_NUM = 4;

@@ -2,7 +2,9 @@
  * The MIT License (MIT)
  * Copyright (c) 2019 terryky1220@gmail.com
  * ------------------------------------------------ */
+import { GLUtil } from './util_shader.js';
 var dbgstr = {};
+export { dbgstr, init_dbgstr };
 
 dbgstr.s_strDbgStrVS = `
     attribute vec4 a_Vertex;
@@ -65,7 +67,7 @@ dbgstr.load_debug_font_texture = function (gl)
 
 dbgstr.setup_shader = function (gl)
 {
-    sobj = GLUtil.generate_shader (gl, dbgstr.s_strDbgStrVS, dbgstr.s_strDbgStrFS);
+    let sobj = GLUtil.generate_shader (gl, dbgstr.s_strDbgStrVS, dbgstr.s_strDbgStrFS);
 
     dbgstr.locVtx = gl.getAttribLocation (sobj.program, "a_Vertex");
     dbgstr.locUv  = gl.getAttribLocation (sobj.program, "a_UV"    );

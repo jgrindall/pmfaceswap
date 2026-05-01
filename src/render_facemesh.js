@@ -2,6 +2,9 @@
  * The MIT License (MIT)
  * Copyright (c) 2020 terryky1220@gmail.com
  * ------------------------------------------------ */
+import { GLUtil } from './common/util_texture.js';
+import { matrix_identity, matrix_mult } from './common/util_matrix.js';
+
 var render = {}
 
 render.strVS = `
@@ -91,7 +94,7 @@ function init_facemesh_render (gl, w, h)
     render.matPrj[0] =  2.0 / w;
     render.matPrj[5] = -2.0 / h;
 
-    render.texid_dummy = GLUtil.create_image_texture (gl, "../assets/white.png");
+    render.texid_dummy = GLUtil.create_image_texture (gl, "./assets/white.png");
 
     render.vbo_vtx = gl.createBuffer();
     render.vbo_uv  = gl.createBuffer();
@@ -995,3 +998,5 @@ render.s_face_uv = [
   0.710287988185883, 0.368252992630005,
   0.723330020904541, 0.363372981548309
 ];
+
+export { init_facemesh_render, resize_facemesh_render, draw_facemesh_tri_tex };

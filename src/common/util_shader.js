@@ -3,6 +3,7 @@
  * Copyright (c) 2020 terryky1220@gmail.com
  * ------------------------------------------------ */
 var GLUtil = {};
+export { GLUtil };
 
 
 GLUtil.load_file_sync = function (url) 

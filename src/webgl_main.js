@@ -3,6 +3,13 @@
  * Copyright (c) 2020 terryky1220@gmail.com
  * ------------------------------------------------ */
 //tf.setBackend('wasm').then(() => startWebGL());
+import Stats from 'stats.js';
+import * as dat from 'dat.gui';
+import { GLUtil } from './common/util_texture.js';
+import { r2d } from './common/util_render2d.js';
+import { dbgstr, init_dbgstr } from './common/util_debugstr.js';
+import { pmeter } from './common/util_pmeter.js';
+import { init_facemesh_render, draw_facemesh_tri_tex, resize_facemesh_render } from './render_facemesh.js';
 
 let s_debug_log;
 let s_is_dragover = false;
@@ -155,8 +162,8 @@ render_2d_scene (gl, texid, face_predictions, tex_w, tex_h,
         for (let i = 0; i < mask_keypoints.length; i++)
         {
             let p = mask_keypoints[i];
-            x = p[0] / masktex.image.width  * tw + tx;
-            y = p[1] / masktex.image.height * th + ty;
+            let x = p[0] / masktex.image.width  * tw + tx;
+            let y = p[1] / masktex.image.height * th + ty;
             r2d.draw_2d_fillrect (gl, x - radius/2, y - radius/2, radius,  radius, color);
         }
     }
@@ -271,7 +278,7 @@ function on_drop (event)
 /* ---------------------------------------------------------------- *
  *      M A I N    F U N C T I O N
  * ---------------------------------------------------------------- */
-function startWebGL()
+export function startWebGL()
 {
     s_debug_log = document.getElementById('debug_log');
     let current_phase = 0;
@@ -331,8 +338,8 @@ function startWebGL()
             alert('failed to load facemesh model');
         }
 
-        let promise = faceLandmarksDetection.load(
-            faceLandmarksDetection.SupportedPackages.mediapipeFacemesh);
+        let promise = window.faceLandmarksDetection.load(
+            window.faceLandmarksDetection.SupportedPackages.mediapipeFacemesh);
         promise.then (on_facemesh_model_load)
                .catch(on_facemesh_model_load_failed);
     }
@@ -348,7 +355,7 @@ function startWebGL()
     {
         pmeter.reset_lap (0);
         pmeter.set_lap (0);
-        s_debug_log.innerHTML = "tfjs.Backend = " + tf.getBackend() + "<br>"
+        s_debug_log.innerHTML = "tfjs.Backend = " + window.tf.getBackend() + "<br>"
 
         let cur_time_ms = performance.now();
         let interval_ms = cur_time_ms - prev_time_ms;
@@ -425,7 +432,7 @@ function startWebGL()
             current_phase = 2;
             let time_invoke1_start = performance.now();
 
-            num_repeat = mask_updated ? 2 : 1;
+            let num_repeat = mask_updated ? 2 : 1;
             for (let i = 0; i < num_repeat; i ++) /* repeat 5 times to flush pipeline ? */
             {
                 if (GLUtil.is_camera_ready(camtex))

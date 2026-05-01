@@ -1179,3 +1179,16 @@ function quaternion_copy (lpTo, lpFrom)
     lpTo[3] = lpFrom[3];    /* z */
 }
 
+export {
+    M_PId180f, DEG_TO_RAD, RAD_TO_DEG,
+    vec3_length, vec2_length, vec3_normalize, vec2_normalize,
+    matrix_turn_x, matrix_turn_y, matrix_turn_z,
+    matrix_translate, matrix_rotate, matrix_scale,
+    matrix_modellookat, matrix_mult, matrix_identity,
+    matrix_multvec2, matrix_multvec4, matrix_copy,
+    matrix_proj_frustum, matrix_proj_perspective, matrix_proj_ortho,
+    matrix_transpose, matrix_invert,
+    quaternion_mult, quaternion_to_matrix, quaternion_rotate,
+    quaternion_identity, quaternion_copy,
+};
+
