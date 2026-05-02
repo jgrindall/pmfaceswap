@@ -2,6 +2,11 @@ import * as THREE from 'three'
 
 export type Color4 = [number, number, number, number]
 
+export const RENDER_ORDER_BACKGROUND = 0
+export const RENDER_ORDER_BODY       = 1
+export const RENDER_ORDER_FACE       = 2
+export const RENDER_ORDER_HAT        = 3
+
 export interface TexObj {
     ready: boolean
     texture: THREE.Texture
@@ -13,21 +18,14 @@ export interface CamTexObj {
     texture: THREE.VideoTexture
     video: HTMLVideoElement
 }
-
-type FillMesh = THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
-
-export class Scene2D
-{
+export class Scene2D {
     private renderer:   THREE.WebGLRenderer
     private scene:      THREE.Scene
     private camera:     THREE.OrthographicCamera
     private bgMaterial: THREE.MeshBasicMaterial
     private bgMesh:     THREE.Mesh
-    private fillMeshes: FillMesh[] = []
-    private fillCount   = 0
-
-    public constructor (canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, w: number, h: number)
-    {
+    
+    constructor (canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, w: number, h: number) {
         this.renderer = new THREE.WebGLRenderer({ 
             canvas, 
             context: gl, 
@@ -41,7 +39,7 @@ export class Scene2D
         this.scene  = new THREE.Scene()
 
         /* OrthographicCamera(left, right, top, bottom, near, far)*/
-        this.camera = new THREE.OrthographicCamera(0, w, 0, h, -1, 1)
+        this.camera = new THREE.OrthographicCamera(0, w, 0, h, -1000, 1000)
 
         /* background quad — DoubleSide so negative-x-scale (H-flip) still renders */
         this.bgMaterial = new THREE.MeshBasicMaterial({
@@ -49,8 +47,8 @@ export class Scene2D
             depthTest: false, 
             side: THREE.DoubleSide 
         })
-        this.bgMesh     = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.bgMaterial)
-        this.bgMesh.renderOrder = 0
+        this.bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.bgMaterial)
+        this.bgMesh.renderOrder = RENDER_ORDER_BACKGROUND
         this.bgMesh.visible = false
         this.scene.add(this.bgMesh)
     }
@@ -81,15 +79,6 @@ export class Scene2D
         if (texObj?.texture) {
             texObj.texture.needsUpdate = true
             this.renderer.initTexture(texObj.texture)
-        }
-    }
-
-    /** Call once per frame before any draw* calls — hides all pooled meshes and resets draw counters. */
-    public begin (): void {
-        this.bgMesh.visible = false
-        this.fillCount = 0
-        for (const m of this.fillMeshes){
-            m.visible = false
         }
     }
 

@@ -29,8 +29,10 @@ import { HatRenderer } from './hat_renderer.ts'
 import { BodyRenderer } from './body_renderer.ts'
 import './css/loading1.css'
 
-const MASK_ALPHA           = 0.75
-const FACE_DETECT_INTERVAL = 2   /* run TF.js every N frames; raise to 3-4 for more speed */
+const MASK_ALPHA           = 1.0
+
+/* run TF.js every N frames; raise to 3-4 for more speed */
+const FACE_DETECT_INTERVAL = 4
 
 let canvas!:        HTMLCanvasElement
 let win_w           = 0
@@ -117,7 +119,6 @@ async function render (): Promise<void>
      *  render scene  (single Three.js pass)
      * --------------------------------------- */
     scene2d.clear()
-    scene2d.begin()
     faceMesh.reset()
     bodyRend.reset()
     hatRend.reset()
@@ -159,8 +160,8 @@ onMounted(async () =>
     win_h    = canvas.clientHeight
     scene2d  = new Scene2D(canvas, gl, win_w, win_h)
     faceMesh  = new FaceMeshRenderer(scene2d)
-    bodyRend  = new BodyRenderer('./shirt.jpg', scene2d)
-    hatRend   = new HatRenderer('./hat.png', scene2d)
+    bodyRend  = new BodyRenderer('./assets/shirt.jpg', scene2d)
+    hatRend   = new HatRenderer('./assets/tut.glb', scene2d)
     camtex    = TextureFactory.fromCamera()
     imgtex    = TextureFactory.fromUrl('assets/egypt.png')
     maskMgr   = new MaskManager('./assets/mask/einstein.jpg', scene2d)

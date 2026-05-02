@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { TexObj, CamTexObj } from './scene2d.ts'
 
 export class TextureFactory {
+    
     /** Load an image from a URL into a texture. Ready flag is set once the image has loaded. */
     public static fromUrl (url: string): TexObj{
         const obj: TexObj = { 

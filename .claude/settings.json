@@ -20,7 +20,9 @@
       "PowerShell(Rename-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\webgl_main.js\" \"webgl_main.ts\")",
       "Bash(npx vue-tsc *)",
       "Bash(echo \"exit: $?\")",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const pkg = require\\('./node_modules/three/package.json'\\); console.log\\(pkg.version\\)\")",
+      "Bash(npx tsc *)"
     ],
     "additionalDirectories": [
       "c:\\workspace\\pmfaceswap\\src",
