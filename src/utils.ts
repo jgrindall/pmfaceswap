@@ -13,18 +13,26 @@ export interface SizeRegion {
 
 /** Returns the screen-space centroid of a landmark array, accounting for the
  *  mirrored X axis and the canvas offset/scale from calculateSizeToFit. */
-export function landmarkCentroid (
-    landmarks:   FaceLandmark[],
-    sourceWidth: number,
-    region:      SizeRegion
-): { x: number; y: number } {
-    const { scale, offsetX, offsetY } = region
-    let x = 0, y = 0
+export function landmarkCentroid (landmarks:   FaceLandmark[], sourceWidth: number, region: SizeRegion): { x: number; y: number } {
+    const { 
+        scale, 
+        offsetX, 
+        offsetY 
+    } = region
+    
+    let x = 0
+    let y = 0
+
+    const count = landmarks.length
     for (const lm of landmarks) {
         x += (sourceWidth - lm[0]) * scale + offsetX
         y += lm[1] * scale + offsetY
     }
-    return { x: x / landmarks.length, y: y / landmarks.length }
+
+    return {
+        x: x / count,
+        y: y / count 
+    }
 }
 
 export function calculateSizeToFit (srcWidth: number, srcHeight: number, winWidth: number, winHeight: number): SizeRegion {
