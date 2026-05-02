@@ -19,7 +19,8 @@
       "PowerShell(Rename-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\render_facemesh.js\" \"render_facemesh.ts\")",
       "PowerShell(Rename-Item \"c:\\\\workspace\\\\pmfaceswap\\\\src\\\\webgl_main.js\" \"webgl_main.ts\")",
       "Bash(npx vue-tsc *)",
-      "Bash(echo \"exit: $?\")"
+      "Bash(echo \"exit: $?\")",
+      "Bash(node -e ' *)"
     ],
     "additionalDirectories": [
       "c:\\workspace\\pmfaceswap\\src",

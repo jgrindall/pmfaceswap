@@ -56,8 +56,7 @@ export class Scene2D
     }
 
     /** Call after canvas is resized to keep renderer and camera in sync. */
-    public resize (w: number, h: number): void
-    {
+    public resize (w: number, h: number): void {
         this.renderer.setSize(w, h, false)
         this.camera.right  = w
         this.camera.bottom = h
@@ -65,24 +64,20 @@ export class Scene2D
     }
 
     /** Clears the framebuffer at the start of each frame. */
-    public clear (): void
-    {
+    public clear (): void {
         this.renderer.clear(true, true, false)
     }
 
-    public add (obj: THREE.Object3D): void
-    {
+    public add (obj: THREE.Object3D): void {
         this.scene.add(obj)
     }
 
-    public reset (): void
-    {
+    public reset (): void {
         this.renderer.resetState()
     }
 
     /** Force-uploads a texture to the GPU so the first rendered frame has no stutter. */
-    public uploadTexture (texObj: TexObj | CamTexObj): void
-    {
+    public uploadTexture (texObj: TexObj | CamTexObj): void {
         if (texObj?.texture) {
             texObj.texture.needsUpdate = true
             this.renderer.initTexture(texObj.texture)
@@ -90,8 +85,7 @@ export class Scene2D
     }
 
     /** Call once per frame before any draw* calls — hides all pooled meshes and resets draw counters. */
-    public begin (): void
-    {
+    public begin (): void {
         this.bgMesh.visible = false
         this.fillCount = 0
         for (const m of this.fillMeshes){
@@ -99,51 +93,22 @@ export class Scene2D
         }
     }
 
-    private positionMesh (mesh: THREE.Object3D, x: number, y: number, w: number, h: number): void
-    {
+    private positionMesh (mesh: THREE.Object3D, x: number, y: number, w: number, h: number): void {
         mesh.position.set(x + w * 0.5, y + h * 0.5, 0)
         mesh.scale.set(w, h, 1)
     }
 
     /** Draws the camera feed or source image as the full-canvas backdrop. */
-    public drawBackground (texture: THREE.Texture, x: number, y: number, w: number, h: number, flipH: boolean): void
-    {
-        this.bgMaterial.map         = texture
+    public drawBackground (texture: THREE.Texture, x: number, y: number, w: number, h: number, flipH: boolean): void {
+        this.bgMaterial.map = texture
         this.bgMaterial.needsUpdate = true
         this.positionMesh(this.bgMesh, x, y, w, h)
         this.bgMesh.scale.x = flipH ? -w : w
         this.bgMesh.visible  = true
     }
 
-    private getFillMesh (): FillMesh
-    {
-        if (this.fillCount >= this.fillMeshes.length) {
-            const mat  = new THREE.MeshBasicMaterial({
-                transparent: true, 
-                depthTest: false 
-            })
-            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), mat) as FillMesh
-            mesh.renderOrder = 4
-            this.scene.add(mesh)
-            this.fillMeshes.push(mesh)
-        }
-        const m   = this.fillMeshes[this.fillCount++]!
-        m.visible = true
-        return m
-    }
-
-    /** Draws a solid filled rectangle — used for the loading progress bar. */
-    public drawFillRect (x: number, y: number, w: number, h: number, color: Color4): void
-    {
-        const mesh = this.getFillMesh()
-        this.positionMesh(mesh, x, y, w, h)
-        mesh.material.color.setRGB(color[0], color[1], color[2])
-        mesh.material.opacity = color[3]
-    }
-
     /** Submits the Three.js scene to the GPU. Call once at the end of each frame. */
-    public render (): void
-    {
+    public render (): void {
         this.renderer.render(this.scene, this.camera)
     }
 }

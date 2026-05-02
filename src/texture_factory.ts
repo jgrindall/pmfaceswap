@@ -1,8 +1,7 @@
 import * as THREE from 'three'
 import type { TexObj, CamTexObj } from './scene2d.ts'
 
-export class TextureFactory
-{
+export class TextureFactory {
     /** Load an image from a URL into a texture. Ready flag is set once the image has loaded. */
     public static fromUrl (url: string): TexObj{
         const obj: TexObj = { 
@@ -22,7 +21,7 @@ export class TextureFactory
     }
 
     /** Load an image from a dropped File into a texture. Ready flag is set once decoded. */
-    public static fromFile (file: File): TexObj{
+    public static fromFile (file: File): TexObj {
         const texture = new THREE.Texture()
         const obj: TexObj = {
             ready: false,
@@ -47,8 +46,7 @@ export class TextureFactory
     }
 
     /** Open the device camera as a live VideoTexture. Ready flag is set once the stream starts. */
-    public static fromCamera (): CamTexObj
-    {
+    public static fromCamera (): CamTexObj {
         const video = document.createElement('video')
         video.autoplay = true
         video.muted = true

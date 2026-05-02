@@ -1,13 +1,15 @@
 
 import * as THREE from 'three'
 import type { Scene2D, Color4 } from './scene2d.ts'
+import type { SizeRegion } from './utils.ts'
 import faceTris      from './assets/face_mesh_tris.json'
 import faceContourIdx from './assets/face_contour_idx.json'
 import strVS from './shaders/facemesh.vert?raw'
 import strFS from './shaders/facemesh.frag?raw'
 
 const LANDMARK_COUNT = 468
-const RENDER_ORDER   = 1   /* between background (0) and overlay (2+) */
+const RENDER_ORDER   = 2   /* above body (1), below hat (3) */
+const EXPAND_FACTOR  = 1.15 /* scale mesh outward from centroid to cover ears/hairline */
 
 const makeAlphaAttr = (len: number, indices:number[]): THREE.BufferAttribute => {
     const alpha = new Float32Array(len).fill(1.0)
@@ -26,16 +28,14 @@ interface FaceMeshUniforms {
     u_alpha:   THREE.IUniform<number>
 }
 
-export class FaceMeshRenderer
-{
+export class FaceMeshRenderer{
     private posAttr:        THREE.BufferAttribute
     private uvAttr:         THREE.BufferAttribute
     private material:       THREE.ShaderMaterial
     private mesh:           THREE.Mesh
     private uniforms: FaceMeshUniforms & Uniforms
 
-    public constructor (scene2d: Scene2D)
-    {
+    public constructor (scene2d: Scene2D){
         
         this.posAttr = new THREE.BufferAttribute(new Float32Array(LANDMARK_COUNT * 3), 3)
         this.uvAttr  = new THREE.BufferAttribute(new Float32Array(LANDMARK_COUNT * 2), 2)
@@ -82,17 +82,40 @@ export class FaceMeshRenderer
         this.mesh.visible = false
     }
 
-    /** Warps the mask texture onto the detected face by uploading landmark positions as vertices and mask UVs. */
-    public draw (vtx: number[], uv: number[], color: Color4, maskTexture: THREE.Texture): void
-    {
+    /** Warps the mask texture onto the detected face landmarks. */
+    public draw (
+        srcKp:    FaceLandmark[],
+        maskKp:   FaceLandmark[],
+        src_w:    number,
+        region:   SizeRegion,
+        mask_img: HTMLImageElement,
+        color:    Color4,
+        texture:  THREE.Texture
+    ): void {
+        const { scale, tex_x: tx, tex_y: ty } = region
+
+        /* compute screen-space centroid for uniform expansion */
+        let cx = 0, cy = 0
         for (let i = 0; i < LANDMARK_COUNT; i++) {
-            this.posAttr.setXYZ(i, vtx[3*i]!, vtx[3*i+1]!, 0)
-            this.uvAttr.setXY(i, uv [2*i]!, uv [2*i+1]!)
+            const p = srcKp[i]!
+            cx += (src_w - p[0]) * scale + tx
+            cy += p[1] * scale + ty
+        }
+        cx /= LANDMARK_COUNT
+        cy /= LANDMARK_COUNT
+
+        for (let i = 0; i < LANDMARK_COUNT; i++) {
+            const p  = srcKp[i]!
+            const sx = (src_w - p[0]) * scale + tx
+            const sy = p[1] * scale + ty
+            this.posAttr.setXYZ(i, cx + (sx - cx) * EXPAND_FACTOR, cy + (sy - cy) * EXPAND_FACTOR, 0)
+            const q = maskKp[i]!
+            this.uvAttr.setXY(i, q[0] / mask_img.width, q[1] / mask_img.height)
         }
         this.posAttr.needsUpdate = true
         this.uvAttr.needsUpdate  = true
 
-        this.uniforms.u_sampler.value = maskTexture
+        this.uniforms.u_sampler.value = texture
         this.uniforms.u_color.value.setRGB(color[0], color[1], color[2])
         this.uniforms.u_alpha.value = color[3]
 

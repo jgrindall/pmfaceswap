@@ -9,22 +9,32 @@ declare module 'stats.js' {
     }
 }
 
-type FaceLandmark = [number, number, number]
+type FaceLandmark = [
+    number, 
+    number, 
+    number
+]
 
 interface FacemeshFace {
     scaledMesh: FaceLandmark[]
 }
 
 interface FacemeshModel {
-    estimateFaces(options: { input: HTMLImageElement | HTMLVideoElement }): Promise<FacemeshFace[]>
+    estimateFaces(options: { 
+        input: HTMLImageElement | HTMLVideoElement 
+    }): Promise<FacemeshFace[]>
 }
 
 interface FaceLandmarksDetectionLib {
-    SupportedPackages: { mediapipeFacemesh: string }
-    load(pkg: string): Promise<FacemeshModel>
+    SupportedPackages: {
+        mediapipeFacemesh: string 
+    }
+    load(package: string): Promise<FacemeshModel>
 }
 
 interface Window {
     faceLandmarksDetection: FaceLandmarksDetectionLib
-    tf: { getBackend(): string }
+    tf: { 
+        getBackend(): string 
+    }
 }
