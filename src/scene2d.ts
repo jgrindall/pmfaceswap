@@ -51,6 +51,12 @@ export class Scene2D {
         this.bgMesh.renderOrder = RENDER_ORDER_BACKGROUND
         this.bgMesh.visible = false
         this.scene.add(this.bgMesh)
+
+        /* lights needed by MeshStandardMaterial (used by GLB models) */
+        this.scene.add(new THREE.AmbientLight(0xffffff, 1.0))
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8)
+        dirLight.position.set(0, -1, 1)
+        this.scene.add(dirLight)
     }
 
     /** Call after canvas is resized to keep renderer and camera in sync. */

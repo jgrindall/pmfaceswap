@@ -123,7 +123,6 @@ async function render (): Promise<void>
     bodyRend.reset()
     hatRend.reset()
 
-    /* background — static image, fill canvas */
     scene2d.drawBackground(imgtex.texture, 0, 0, win_w, win_h, false)
 
     /* body, face warp, hat */
@@ -164,7 +163,7 @@ onMounted(async () =>
     hatRend   = new HatRenderer('./assets/tut.glb', scene2d)
     camtex    = TextureFactory.fromCamera()
     imgtex    = TextureFactory.fromUrl('assets/egypt.png')
-    maskMgr   = new MaskManager('./assets/mask/einstein.jpg', scene2d)
+    maskMgr   = new MaskManager('./assets/mask/khamun.jpg', scene2d)
 
     canvas.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault()

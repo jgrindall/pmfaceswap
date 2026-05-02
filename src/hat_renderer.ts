@@ -11,7 +11,7 @@ const IDX_R_EAR    = 454
 
 export class HatRenderer
 {
-    private group:     THREE.Group | undefined
+    private pivot:     THREE.Group | undefined
     private normScale  = 1
 
     public constructor (url: string, scene2d: Scene2D)
@@ -19,38 +19,71 @@ export class HatRenderer
         new GLTFLoader().load(url, gltf => {
             const model = gltf.scene
 
+            /* normalise so the longest axis == 1 unit */
+            const box    = new THREE.Box3().setFromObject(model)
+            const size   = box.getSize(new THREE.Vector3())
+            const maxDimension = Math.max(size.x, size.y, size.z)
+            this.normScale = 1 / maxDimension
+
+            /* offset model inside a pivot so its bounding-box centre is at the pivot origin.
+               Setting pivot.position in draw() then moves the visual centre correctly. */
+            const center = box.getCenter(new THREE.Vector3())
+            model.position.set(-center.x, -center.y, -center.z)
+
+            this.pivot = new THREE.Group()
+            this.pivot.add(model)
+
+            /* renderOrder on the Mesh children (doesn't cascade from Group);
+               swap to BasicMaterial so no lights are required */
+
             model.traverse(obj => {
                 if (obj instanceof THREE.Mesh) {
-                    const mats = Array.isArray(obj.material) ? obj.material : [obj.material]
-                    for (const mat of mats as THREE.Material[]) {
-                        (mat as THREE.MeshStandardMaterial).side = THREE.DoubleSide
-                    }
+                    obj.renderOrder   = RENDER_ORDER_HAT
+                    obj.frustumCulled = false
+                    const wasArray = Array.isArray(obj.material)
+                    const mats     = wasArray ? obj.material as THREE.Material[] : [obj.material as THREE.Material]
+                    const basics   = mats.map(m => {
+                        const src   = m as THREE.MeshStandardMaterial
+                        const basic = new THREE.MeshBasicMaterial({
+                            map:         src.map         ?? null,
+                            color:       src.color       ?? new THREE.Color(1, 1, 1),
+                            transparent: true,  /* must be true to join the transparent render pass where renderOrder is respected */
+                            opacity:     src.opacity     ?? 1.0,
+                            depthTest:   false,
+                            side:        THREE.DoubleSide,
+                        })
+                        m.dispose()
+                        return basic
+                    })
+                    obj.material = wasArray ? basics : basics[0]!
                 }
             })
 
-            /* normalise so the longest axis == 1 unit, centred at origin */
-            const box    = new THREE.Box3().setFromObject(model)
-            const size   = box.getSize(new THREE.Vector3())
-            this.normScale = 1 / Math.max(size.x, size.y, size.z)
-            const center = box.getCenter(new THREE.Vector3())
-            model.position.sub(center)
-
-            this.group             = model
-            this.group.visible     = false
-            this.group.renderOrder = RENDER_ORDER_HAT
-            scene2d.add(this.group)
+            this.pivot.visible = false
+            scene2d.add(this.pivot)
         })
     }
 
-    public reset (): void { if (this.group) this.group.visible = false }
+    public reset (): void {
+        if (this.pivot){
+            this.pivot.visible = false
+        }
+    }
 
-    public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void
-    {
-        if (!this.group) return
+    private debugLogged = false
+
+    public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void{
+        if (!this.pivot){
+            return
+        }
         const { scale, offsetX, offsetY } = region
 
-        const toScreenX = (lm: FaceLandmark) => (sourceWidth - lm[0]) * scale + offsetX
-        const toScreenY = (lm: FaceLandmark) => lm[1] * scale + offsetY
+        const toScreenX = (lm: FaceLandmark) => {
+            return (sourceWidth - lm[0]) * scale + offsetX
+        }
+        const toScreenY = (lm: FaceLandmark) => {
+            return lm[1] * scale + offsetY
+        }
 
         const forehead = landmarks[IDX_FOREHEAD]!
         const chin     = landmarks[IDX_CHIN]!
@@ -62,16 +95,23 @@ export class HatRenderer
         const modelScale  = hatSizePx * this.normScale
 
         /* roll: angle of face-up vector in screen space */
-        const upX = toScreenX(forehead) - toScreenX(chin)
-        const upY = toScreenY(forehead) - toScreenY(chin)
+        const upX  = toScreenX(forehead) - toScreenX(chin)
+        const upY  = toScreenY(forehead) - toScreenY(chin)
         const roll = Math.atan2(upX, -upY)
 
         /* yaw: difference in z-depth of ears (mediapipe provides normalised z) */
         const yaw = (leftEar[2] - rightEar[2]) * 0.005
 
-        this.group.position.set(toScreenX(forehead), toScreenY(forehead) - hatSizePx * 0.3, 0)
-        this.group.scale.set(modelScale, -modelScale, modelScale)   /* negative Y flips Y-up model into Y-down screen space */
-        this.group.rotation.set(0, yaw, roll)
-        this.group.visible = true
+        const posX = toScreenX(forehead)
+        const posY = toScreenY(forehead) - hatSizePx * 0.3
+        this.pivot.position.set(posX, posY, 0)
+        this.pivot.scale.set(modelScale, -modelScale, modelScale)   /* negative Y flips Y-up model into Y-down screen space */
+        this.pivot.rotation.set(0, yaw, roll)
+        this.pivot.visible = true
+
+        if (!this.debugLogged) {
+            this.debugLogged = true
+            console.log('[HatRenderer] normScale:', this.normScale, 'modelScale:', modelScale, 'pos:', posX.toFixed(1), posY.toFixed(1), 'faceWidthPx:', faceWidthPx.toFixed(1))
+        }
     }
 }

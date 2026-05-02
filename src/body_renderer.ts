@@ -13,33 +13,42 @@ const MOVE_THRESHOLD = 8
 
 export class BodyRenderer
 {
-    private mat:        THREE.MeshBasicMaterial
+    private material:        THREE.MeshBasicMaterial
     private mesh:       THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
     private ready       = false
     private prevChinX   = -9999
     private prevChinY   = -9999
 
-    public constructor (url: string, scene2d: Scene2D)
-    {
-        this.mat  = new THREE.MeshBasicMaterial({ transparent: true, depthTest: false, side: THREE.DoubleSide, alphaTest: 0.01 })
-        this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.mat)
+    public constructor (url: string, scene2d: Scene2D){
+        this.material  = new THREE.MeshBasicMaterial({
+            transparent: true,
+            depthTest: false,
+            side: THREE.DoubleSide,
+            alphaTest: 0.01
+        })
+
+        this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.material)
         this.mesh.renderOrder = RENDER_ORDER_BODY
         this.mesh.visible     = false
         scene2d.add(this.mesh)
 
-        new THREE.TextureLoader().load(url, tex => {
+        new THREE.TextureLoader()
+        .load(url, tex => {
             tex.flipY            = false
-            this.mat.map         = tex
-            this.mat.needsUpdate = true
+            this.material.map         = tex
+            this.material.needsUpdate = true
             this.ready           = true
         })
     }
 
-    public reset (): void { this.mesh.visible = false }
+    public reset (): void { 
+        this.mesh.visible = false 
+    }
 
-    public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void
-    {
-        if (!this.ready) return
+    public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void{
+        if (!this.ready){
+            return
+        }
         const { scale, offsetX, offsetY } = region
 
         const chin    = landmarks[IDX_CHIN]!
