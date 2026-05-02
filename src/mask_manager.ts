@@ -1,20 +1,20 @@
 import { TextureFactory } from './texture_factory.ts'
-import type { Scene2D, TexObj } from './scene2d.ts'
+import type { Scene2D, TextureObject } from './scene2d.ts'
 
 export class MaskManager{
 
-    private maskTextureObj: TexObj
-    private maskTextureNextObj: TexObj | undefined
+    private maskTextureObj: TextureObject
+    private maskTextureNextObj: TextureObject | undefined
     public predictions: FacemeshFace[] = []
     private initDone     = false
     private updateRequired    = false
     private scene2d:      Scene2D
 
-    public get texture ():     TexObj['texture']   { 
+    public get texture ():     TextureObject['texture']   { 
         return this.maskTextureObj.texture
     }
     
-    public get image ():       TexObj['image']     {
+    public get image ():       TextureObject['image']     {
         return this.maskTextureObj.image 
     }
 

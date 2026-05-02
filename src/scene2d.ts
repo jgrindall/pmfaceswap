@@ -7,13 +7,13 @@ export const RENDER_ORDER_BODY       = 1
 export const RENDER_ORDER_FACE       = 2
 export const RENDER_ORDER_HAT        = 3
 
-export interface TexObj {
+export interface TextureObject {
     ready: boolean
     texture: THREE.Texture
     image: HTMLImageElement
 }
 
-export interface CamTexObj {
+export interface CameraTextureObject {
     ready: boolean
     texture: THREE.VideoTexture
     video: HTMLVideoElement
@@ -81,7 +81,7 @@ export class Scene2D {
     }
 
     /** Force-uploads a texture to the GPU so the first rendered frame has no stutter. */
-    public uploadTexture (texObj: TexObj | CamTexObj): void {
+    public uploadTexture (texObj: TextureObject | CameraTextureObject): void {
         if (texObj?.texture) {
             texObj.texture.needsUpdate = true
             this.renderer.initTexture(texObj.texture)

@@ -93,8 +93,8 @@ export class HatRenderer
         const upY  = toScreenY(forehead) - toScreenY(chin)
         const roll = Math.atan2(upX, -upY)
 
-        /* yaw: difference in z-depth of ears (mediapipe provides normalised z) */
-        const yaw = (leftEar[2] - rightEar[2]) * 0.005
+        /* yaw: negated because the Y-flip on the pivot inverts the apparent rotation direction */
+        const yaw = (rightEar[2] - leftEar[2]) * 0.005
 
         const posX = toScreenX(forehead)
         const posY = toScreenY(forehead) - hatSizePx * 0.3

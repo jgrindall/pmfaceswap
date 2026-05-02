@@ -95,7 +95,7 @@ export class FaceMeshRenderer
      * @param faceLandmarks  468 screen-space landmarks from the live camera face
      * @param maskLandmarks  468 image-space landmarks from the mask image face
      * @param sourceWidth    pixel width of the source camera/image frame
-     * @param region         scale + canvas offset produced by calc_size_to_fit
+     * @param region         scale + canvas offset produced by calculateSizeToFit
      * @param maskImage      the mask source image (used to normalise UV coordinates)
      * @param color          RGBA tint applied to the mask [r, g, b, a]
      * @param maskTexture    GPU texture of the mask image
