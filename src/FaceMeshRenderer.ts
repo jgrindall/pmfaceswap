@@ -1,9 +1,9 @@
 
 import * as THREE from 'three'
-import type { Scene2D, Color4 } from './scene2d.ts'
-import { RENDER_ORDER_FACE } from './scene2d.ts'
-import type { SizeRegion } from './utils.ts'
-import { landmarkCentroid } from './utils.ts'
+import type { Scene2D, Color4 } from './Scene.ts'
+import { RENDER_ORDER_FACE } from './Scene.ts'
+import type { SizeRegion } from './Utils.ts'
+import { landmarkCentroid } from './Utils.ts'
 import faceTris            from './assets/face_mesh_tris.json'
 import faceContourIndices  from './assets/face_contour_idx.json'
 import vertexShaderSrc     from './shaders/facemesh.vert?raw'
@@ -113,7 +113,10 @@ export class FaceMeshRenderer
         const { scale, offsetX, offsetY } = region
 
         /* screen-space centroid — used to expand the mesh uniformly outward */
-        const { x: centroidX, y: centroidY } = landmarkCentroid(faceLandmarks, sourceWidth, region)
+        const {
+            x: centroidX,
+            y: centroidY 
+        } = landmarkCentroid(faceLandmarks, sourceWidth, region)
 
         for (let i = 0; i < LANDMARK_COUNT; i++) {
             /* map source-face landmark → mirrored screen position, expanded from centroid */

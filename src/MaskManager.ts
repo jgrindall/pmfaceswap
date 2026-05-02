@@ -1,5 +1,5 @@
-import { TextureFactory } from './texture_factory.ts'
-import type { Scene2D, TextureObject } from './scene2d.ts'
+import { TextureFactory } from './TextureFactory.ts'
+import type { Scene2D, TextureObject } from './Scene.ts'
 
 export class MaskManager{
 

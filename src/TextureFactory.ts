@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { TextureObject, CameraTextureObject } from './scene2d.ts'
+import type { TextureObject, CameraTextureObject } from './Scene.ts'
 
 export class TextureFactory {
     

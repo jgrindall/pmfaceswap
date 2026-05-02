@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import type { Scene2D } from './scene2d.ts'
-import { RENDER_ORDER_BODY } from './scene2d.ts'
-import type { SizeRegion } from './utils.ts'
+import type { Scene2D } from './Scene.ts'
+import { RENDER_ORDER_BODY } from './Scene.ts'
+import type { SizeRegion } from './Utils.ts'
 
 const IDX_CHIN  = 152
 const IDX_TOP   = 10
@@ -11,8 +11,7 @@ const IDX_R_EAR = 454
 /* Skip body repositioning when chin moves less than this many pixels */
 const MOVE_THRESHOLD = 8
 
-export class BodyRenderer
-{
+export class BodyRenderer {
     private material:        THREE.MeshBasicMaterial
     private mesh:       THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
     private ready       = false

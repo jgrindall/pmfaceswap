@@ -1,10 +1,13 @@
 export interface SizeRegion {
     width:        number  /* full canvas width */
     height:       number  /* full canvas height */
+
     offsetX:      number  /* left edge of the image on canvas */
     offsetY:      number  /* top edge of the image on canvas */
+    
     displayWidth: number  /* image width after scaling to fit */
     displayHeight: number /* image height after scaling to fit */
+    
     scale:        number  /* uniform scale factor applied to source pixels */
 }
 

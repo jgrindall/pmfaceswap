@@ -12,13 +12,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import Stats from 'stats.js'
-import { Scene2D, type Color4, type TextureObject, type CameraTextureObject } from './scene2d.ts'
-import { FaceMeshRenderer } from './render_facemesh.ts'
-import { TextureFactory } from './texture_factory.ts'
-import { calculateSizeToFit } from './utils.ts'
-import { MaskManager } from './mask_manager.ts'
-import { HatRenderer } from './hat_renderer.ts'
-import { BodyRenderer } from './body_renderer.ts'
+import { Scene2D, type Color4, type TextureObject, type CameraTextureObject } from './Scene.ts'
+import { FaceMeshRenderer } from './FaceMeshRenderer.ts'
+import { TextureFactory } from './TextureFactory.ts'
+import { calculateSizeToFit } from './Utils.ts'
+import { MaskManager } from './MaskManager.ts'
+import { HatRenderer } from './HeadRenderer.ts'
+import { BodyRenderer } from './BodyRenderer.ts'
 import './css/loading1.css'
 
 /* 
@@ -44,26 +44,20 @@ let frameCount       = 0
 
 const canvasEl  = ref<HTMLCanvasElement | null>(null)
 
-async function render (): Promise<void>
-{
+async function render (): Promise<void>{
     stats.begin()
 
-    /* resize canvas if needed */
-    {
-        const displayW = canvas.clientWidth
-        const displayH = canvas.clientHeight
-        if (canvas.width !== displayW || canvas.height !== displayH) {
-            canvas.width  = displayW
-            canvas.height = displayH
-            scene2d.resize(displayW, displayH)
-        }
-        canvasWidth  = canvas.width
-        canvasHeight = canvas.height
+    const displayW = canvas.clientWidth
+    const displayH = canvas.clientHeight
+    if (canvas.width !== displayW || canvas.height !== displayH) {
+        canvas.width  = displayW
+        canvas.height = displayH
+        scene2d.resize(displayW, displayH)
     }
-
-    /* --------------------------------------- *
-     *  Update Mask (if needed)
-     * --------------------------------------- */
+    canvasWidth  = canvas.width
+    canvasHeight = canvas.height
+    
+    
     let maskUpdated = false
     if (modelReady && facemeshModel) {
         maskUpdated = await maskManager.update(facemeshModel)
@@ -83,7 +77,7 @@ async function render (): Promise<void>
     }
 
     /* --------------------------------------- *
-     *  Invoke TF.js (Facemesh)
+     *  Invoke TF.js
      * --------------------------------------- */
     const sourceRegion = calculateSizeToFit(sourceWidth, sourceHeight, canvasWidth, canvasHeight)
 
@@ -94,7 +88,7 @@ async function render (): Promise<void>
     }
 
     /* --------------------------------------- *
-     *  Render scene  (single Three.js pass)
+     *  Render
      * --------------------------------------- */
     scene2d.clear()
     scene2d.drawBackground(imageTexture.texture, 0, 0, canvasWidth, canvasHeight, false)
