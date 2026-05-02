@@ -1,4 +1,5 @@
 import * as THREE from 'three'
+import { BackgroundManager } from './BackgroundManager.ts'
 
 export type Color4 = [number, number, number, number]
 
@@ -18,13 +19,12 @@ export interface CameraTextureObject {
     texture: THREE.VideoTexture
     video: HTMLVideoElement
 }
-export class Scene2D {
+export class RendererManager {
     private renderer:   THREE.WebGLRenderer
     private scene:      THREE.Scene
     private camera:     THREE.OrthographicCamera
-    private bgMaterial: THREE.MeshBasicMaterial
-    private bgMesh:     THREE.Mesh
-    
+    private bg: BackgroundManager
+
     constructor (canvas: HTMLCanvasElement, gl: WebGL2RenderingContext, w: number, h: number) {
         this.renderer = new THREE.WebGLRenderer({ 
             canvas, 
@@ -41,16 +41,7 @@ export class Scene2D {
         /* OrthographicCamera(left, right, top, bottom, near, far)*/
         this.camera = new THREE.OrthographicCamera(0, w, 0, h, -1000, 1000)
 
-        /* background quad — DoubleSide so negative-x-scale (H-flip) still renders */
-        this.bgMaterial = new THREE.MeshBasicMaterial({
-            transparent: true, 
-            depthTest: false, 
-            side: THREE.DoubleSide 
-        })
-        this.bgMesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.bgMaterial)
-        this.bgMesh.renderOrder = RENDER_ORDER_BACKGROUND
-        this.bgMesh.visible = false
-        this.scene.add(this.bgMesh)
+        this.bg = new BackgroundManager(this.scene)
 
         /* lights needed by MeshStandardMaterial (used by GLB models) */
         this.scene.add(new THREE.AmbientLight(0xffffff, 1.0))
@@ -80,26 +71,9 @@ export class Scene2D {
         this.renderer.resetState()
     }
 
-    /** Force-uploads a texture to the GPU so the first rendered frame has no stutter. */
-    public uploadTexture (texObj: TextureObject | CameraTextureObject): void {
-        if (texObj?.texture) {
-            texObj.texture.needsUpdate = true
-            this.renderer.initTexture(texObj.texture)
-        }
-    }
-
-    private positionMesh (mesh: THREE.Object3D, x: number, y: number, w: number, h: number): void {
-        mesh.position.set(x + w * 0.5, y + h * 0.5, 0)
-        mesh.scale.set(w, h, 1)
-    }
-
     /** Draws the camera feed or source image as the full-canvas backdrop. */
     public drawBackground (texture: THREE.Texture, x: number, y: number, w: number, h: number, flipH: boolean): void {
-        this.bgMaterial.map = texture
-        this.bgMaterial.needsUpdate = true
-        this.positionMesh(this.bgMesh, x, y, w, h)
-        this.bgMesh.scale.x = flipH ? -w : w
-        this.bgMesh.visible  = true
+        this.bg.draw(texture, x, y, w, h, flipH)
     }
 
     /** Submits the Three.js scene to the GPU. Call once at the end of each frame. */

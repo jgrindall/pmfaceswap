@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import type { Scene2D } from './Scene.ts'
+import type { RendererManager } from './Scene.ts'
 import { RENDER_ORDER_HAT } from './Scene.ts'
 import type { SizeRegion } from './Utils.ts'
 
@@ -9,11 +9,15 @@ const IDX_CHIN     = 152
 const IDX_L_EAR    = 234
 const IDX_R_EAR    = 454
 
-export class HatRenderer{
-    private pivot:     THREE.Group | undefined
+export class HeadRenderer{
+    private pivot: THREE.Group | undefined
     private normScale  = 1
     
-    public constructor (url: string, scene2d: Scene2D){
+    public constructor (private renderer: RendererManager){
+        
+    }
+
+    public load(url: string){
         new GLTFLoader().load(url, gltf => {
             const model = gltf.scene
 
@@ -58,7 +62,7 @@ export class HatRenderer{
             })
 
             this.pivot.visible = false
-            scene2d.add(this.pivot)
+            this.renderer.add(this.pivot)
         })
     }
 
@@ -71,6 +75,7 @@ export class HatRenderer{
         const toScreenX = (lm: FaceLandmark) => {
             return (sourceWidth - lm[0]) * scale + offsetX
         }
+
         const toScreenY = (lm: FaceLandmark) => {
             return lm[1] * scale + offsetY
         }

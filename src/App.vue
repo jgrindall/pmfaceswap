@@ -12,12 +12,12 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import Stats from 'stats.js'
-import { Scene2D, type Color4, type TextureObject, type CameraTextureObject } from './Scene.ts'
+import { RendererManager, type Color4, type TextureObject, type CameraTextureObject } from './Scene.ts'
 import { FaceMeshRenderer } from './FaceMeshRenderer.ts'
 import { TextureFactory } from './TextureFactory.ts'
 import { calculateSizeToFit } from './Utils.ts'
 import { MaskManager } from './MaskManager.ts'
-import { HatRenderer } from './HeadRenderer.ts'
+import { HeadRenderer } from './HeadRenderer.ts'
 import { BodyRenderer } from './BodyRenderer.ts'
 import './css/loading1.css'
 
@@ -29,9 +29,9 @@ const FACE_DETECT_INTERVAL = 3
 let canvas!:         HTMLCanvasElement
 let canvasWidth      = 0
 let canvasHeight     = 0
-let scene2d!:        Scene2D
+let renderer!:       RendererManager
 let faceMesh!:       FaceMeshRenderer
-let hatRenderer!:    HatRenderer
+let headRenderer!:    HeadRenderer
 let bodyRenderer!:   BodyRenderer
 let cameraTexture!:         CameraTextureObject
 let imageTexture!:         TextureObject
@@ -52,7 +52,7 @@ async function render (): Promise<void>{
     if (canvas.width !== displayW || canvas.height !== displayH) {
         canvas.width  = displayW
         canvas.height = displayH
-        scene2d.resize(displayW, displayH)
+        renderer.resize(displayW, displayH)
     }
     canvasWidth  = canvas.width
     canvasHeight = canvas.height
@@ -61,7 +61,7 @@ async function render (): Promise<void>{
     let maskUpdated = false
     if (modelReady && facemeshModel) {
         maskUpdated = await maskManager.update(facemeshModel)
-        scene2d.reset()
+        renderer.reset()
     }
 
     /* source dimensions + face-detection input */
@@ -90,8 +90,8 @@ async function render (): Promise<void>{
     /* --------------------------------------- *
      *  Render
      * --------------------------------------- */
-    scene2d.clear()
-    scene2d.drawBackground(imageTexture.texture, 0, 0, canvasWidth, canvasHeight, false)
+    renderer.clear()
+    renderer.drawBackground(imageTexture.texture, 0, 0, canvasWidth, canvasHeight, false)
 
     const maskColor: Color4 = [1, 1, 1, 1]
 
@@ -102,10 +102,10 @@ async function render (): Promise<void>{
         for (const face of detectedFaces){
             faceMesh.draw(face.scaledMesh, maskLandmarks, sourceWidth, sourceRegion, maskManager.image, maskColor, maskManager.texture)
         }
-        hatRenderer.draw(primaryLandmarks, sourceWidth, sourceRegion)
+        headRenderer.draw(primaryLandmarks, sourceWidth, sourceRegion)
     }
 
-    scene2d.render()
+    renderer.render()
     stats.end()
     requestAnimationFrame(render)
 }
@@ -121,13 +121,20 @@ onMounted(async () =>
 
     canvasWidth  = canvas.clientWidth
     canvasHeight = canvas.clientHeight
-    scene2d      = new Scene2D(canvas, gl, canvasWidth, canvasHeight)
-    faceMesh     = new FaceMeshRenderer(scene2d)
-    bodyRenderer = new BodyRenderer('./assets/body/shirt.jpg', scene2d)
-    hatRenderer  = new HatRenderer('./assets/head/tut.glb', scene2d)
-    cameraTexture       = TextureFactory.fromCamera()
-    imageTexture       = TextureFactory.fromUrl('assets/bg/egypt.png')
-    maskManager      = new MaskManager('./assets/mask/khamun.jpg', scene2d)
+
+    renderer      = new RendererManager(canvas, gl, canvasWidth, canvasHeight)
+    faceMesh     = new FaceMeshRenderer(renderer)
+
+    bodyRenderer = new BodyRenderer(renderer)
+    bodyRenderer.load('./assets/body/shirt.jpg');
+    
+    headRenderer = new HeadRenderer(renderer)
+    headRenderer.load('./assets/head/tut.glb')
+    
+    cameraTexture = TextureFactory.fromCamera()
+    imageTexture = TextureFactory.fromUrl('assets/bg/egypt.png')
+    
+    maskManager = new MaskManager('./assets/mask/rapunzel.webp')
 
     canvas.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault()

@@ -1,5 +1,5 @@
 import { TextureFactory } from './TextureFactory.ts'
-import type { Scene2D, TextureObject } from './Scene.ts'
+import type { TextureObject } from './Scene.ts'
 
 export class MaskManager{
 
@@ -8,8 +8,6 @@ export class MaskManager{
     public predictions: FacemeshFace[] = []
     private initDone     = false
     private updateRequired    = false
-    private scene2d:      Scene2D
-
     public get texture ():     TextureObject['texture']   { 
         return this.maskTextureObj.texture
     }
@@ -18,9 +16,8 @@ export class MaskManager{
         return this.maskTextureObj.image 
     }
 
-    constructor (maskUrl: string, scene2d: Scene2D){
+    constructor (maskUrl: string){
         this.maskTextureObj = TextureFactory.fromUrl(maskUrl)
-        this.scene2d = scene2d
     }
 
     /** Queue a new mask image from a dropped file. Applied on the next update(). */
@@ -42,7 +39,7 @@ export class MaskManager{
                 })
             }
             this.initDone = true
-            this.scene2d.uploadTexture(this.maskTextureObj)
+            this.maskTextureObj.texture.needsUpdate = true
             updated = true
         }
 
@@ -53,8 +50,8 @@ export class MaskManager{
                 })
             }
             this.updateRequired = false
-            this.maskTextureObj    = this.maskTextureNextObj
-            this.scene2d.uploadTexture(this.maskTextureObj)
+            this.maskTextureObj = this.maskTextureNextObj
+            this.maskTextureObj.texture.needsUpdate = true
             updated = true
         }
 

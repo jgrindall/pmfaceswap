@@ -1,6 +1,6 @@
 
 import * as THREE from 'three'
-import type { Scene2D, Color4 } from './Scene.ts'
+import type { RendererManager, Color4 } from './Scene.ts'
 import { RENDER_ORDER_FACE } from './Scene.ts'
 import type { SizeRegion } from './Utils.ts'
 import { landmarkCentroid } from './Utils.ts'
@@ -44,7 +44,7 @@ export class FaceMeshRenderer
     private uniforms: FaceMeshUniforms & Uniforms
     private faceFill:      THREE.Mesh  /* black oval rendered behind the mask to fill mouth hole */
 
-    public constructor (scene2d: Scene2D)
+    public constructor (renderer: RendererManager)
     {
         this.positionAttr = new THREE.BufferAttribute(new Float32Array(LANDMARK_COUNT * 3), 3)
         this.uvAttr       = new THREE.BufferAttribute(new Float32Array(LANDMARK_COUNT * 2), 2)
@@ -75,7 +75,7 @@ export class FaceMeshRenderer
 
         this.mesh = new THREE.Mesh(geometry, this.material)
         this.mesh.renderOrder = RENDER_ORDER_FACE
-        scene2d.add(this.mesh)
+        renderer.add(this.mesh)
 
         /* black oval sits just below the face mesh layer, filling any holes (e.g. mouth) */
         this.faceFill = new THREE.Mesh(
@@ -84,7 +84,7 @@ export class FaceMeshRenderer
         )
         this.faceFill.renderOrder = RENDER_ORDER_FACE - 0.5
         this.faceFill.visible     = false
-        scene2d.add(this.faceFill)
+        renderer.add(this.faceFill)
 
         this.mesh.visible = false
     }

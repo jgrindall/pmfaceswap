@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { Scene2D } from './Scene.ts'
+import type { RendererManager } from './Scene.ts'
 import { RENDER_ORDER_BODY } from './Scene.ts'
 import type { SizeRegion } from './Utils.ts'
 
@@ -18,7 +18,7 @@ export class BodyRenderer {
     private prevChinX   = -9999
     private prevChinY   = -9999
 
-    public constructor (url: string, scene2d: Scene2D){
+    public constructor (private renderer: RendererManager){
         this.material  = new THREE.MeshBasicMaterial({
             transparent: true,
             depthTest: false,
@@ -28,16 +28,17 @@ export class BodyRenderer {
 
         this.mesh = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), this.material)
         this.mesh.renderOrder = RENDER_ORDER_BODY
-        this.mesh.visible     = false
-        scene2d.add(this.mesh)
+        this.renderer.add(this.mesh)
+    }
 
-        new THREE.TextureLoader()
-        .load(url, tex => {
-            tex.flipY            = false
-            this.material.map         = tex
+    public load(url: string){
+        const onLoad = (texture: THREE.Texture) => {
+            texture.flipY = false
+            this.material.map = texture
             this.material.needsUpdate = true
-            this.ready           = true
-        })
+            this.ready = true
+        }
+        new THREE.TextureLoader().load(url, onLoad)
     }
 
     public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void{
@@ -68,6 +69,5 @@ export class BodyRenderer {
 
         this.mesh.position.set(chinScreenX, bodyCenterY, 0)
         this.mesh.scale.set(bodyWidth, bodyHeight, 1)
-        this.mesh.visible = true
     }
 }
