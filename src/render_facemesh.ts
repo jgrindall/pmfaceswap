@@ -12,6 +12,12 @@ import fragmentShaderSrc   from './shaders/facemesh.frag?raw'
 const LANDMARK_COUNT = 468
 const EXPAND_FACTOR  = 1.15 /* scale mesh outward from centroid to cover ears/hairline */
 
+/* Landmark indices used to size the black face fill */
+const IDX_FOREHEAD = 10
+const IDX_CHIN     = 152
+const IDX_L_EAR    = 234
+const IDX_R_EAR    = 454
+
 /* Build per-vertex alpha: 1.0 everywhere except the face-contour boundary
    vertices (0.0) so the mask fades out at the edges instead of hard-clipping. */
 const makeEdgeAlphaAttr = (count: number, boundaryIndices: number[]): THREE.BufferAttribute => {
@@ -36,6 +42,7 @@ export class FaceMeshRenderer
     private material:      THREE.ShaderMaterial
     private mesh:          THREE.Mesh
     private uniforms: FaceMeshUniforms & Uniforms
+    private faceFill:      THREE.Mesh  /* black oval rendered behind the mask to fill mouth hole */
 
     public constructor (scene2d: Scene2D)
     {
@@ -68,13 +75,17 @@ export class FaceMeshRenderer
 
         this.mesh = new THREE.Mesh(geometry, this.material)
         this.mesh.renderOrder = RENDER_ORDER_FACE
-        this.reset()
         scene2d.add(this.mesh)
-    }
 
-    /** Hides the face mesh — call at the start of each frame before draw(). */
-    public reset (): void
-    {
+        /* black oval sits just below the face mesh layer, filling any holes (e.g. mouth) */
+        this.faceFill = new THREE.Mesh(
+            new THREE.CircleGeometry(1, 64),
+            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthTest: false })
+        )
+        this.faceFill.renderOrder = RENDER_ORDER_FACE - 0.5
+        this.faceFill.visible     = false
+        scene2d.add(this.faceFill)
+
         this.mesh.visible = false
     }
 
@@ -99,21 +110,14 @@ export class FaceMeshRenderer
         maskTexture:   THREE.Texture
     ): void
     {
-        const {
-            scale,
-            offsetX,
-            offsetY 
-        } = region
+        const { scale, offsetX, offsetY } = region
 
         /* screen-space centroid — used to expand the mesh uniformly outward */
-        const { 
-            x: centroidX, 
-            y: centroidY 
-        } = landmarkCentroid(faceLandmarks, sourceWidth, region)
+        const { x: centroidX, y: centroidY } = landmarkCentroid(faceLandmarks, sourceWidth, region)
 
         for (let i = 0; i < LANDMARK_COUNT; i++) {
             /* map source-face landmark → mirrored screen position, expanded from centroid */
-            const faceLandmark  = faceLandmarks[i]!
+            const faceLandmark = faceLandmarks[i]!
             const screenX = (sourceWidth - faceLandmark[0]) * scale + offsetX
             const screenY = faceLandmark[1] * scale + offsetY
             this.positionAttr.setXYZ(
@@ -135,5 +139,14 @@ export class FaceMeshRenderer
         this.uniforms.u_alpha.value   = color[3]
 
         this.mesh.visible = true
+
+        /* size the black fill oval to the face bounding box */
+        const toSX = (lm: FaceLandmark) => (sourceWidth - lm[0]) * scale + offsetX
+        const toSY = (lm: FaceLandmark) => lm[1] * scale + offsetY
+        const faceWidthPx  = Math.abs(toSX(faceLandmarks[IDX_R_EAR]!) - toSX(faceLandmarks[IDX_L_EAR]!))
+        const faceHeightPx = Math.abs(toSY(faceLandmarks[IDX_CHIN]!)  - toSY(faceLandmarks[IDX_FOREHEAD]!))
+        this.faceFill.position.set(centroidX, centroidY, 0)
+        this.faceFill.scale.set(faceWidthPx * EXPAND_FACTOR, faceHeightPx * EXPAND_FACTOR, 1)
+        this.faceFill.visible = true
     }
 }

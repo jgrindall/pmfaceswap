@@ -5,13 +5,8 @@
     <div ref="spinnerEl" id="loading">
         <div class="spinner"></div>
     </div>
-    <div style="position: relative; display: inline-block; text-align: center">
-        <canvas ref="canvasEl" width="800" height="800" @dragover.prevent>
-        </canvas>
-        <div id="canvas-overlay">
-            <div ref="timingEl" id="timing-info"></div>
-        </div>
-    </div>
+    <canvas ref="canvasEl" width="800" height="800" @dragover.prevent>
+    </canvas>
     <h1>
         Drop a face image to change the face mask.
     </h1>
@@ -30,146 +25,121 @@ import { BodyRenderer } from './body_renderer.ts'
 import './css/loading1.css'
 
 const MASK_ALPHA           = 1.0
+const FACE_DETECT_INTERVAL = 4   /* run TF.js every N frames; raise for more speed */
 
-/* run TF.js every N frames; raise to 3-4 for more speed */
-const FACE_DETECT_INTERVAL = 4
-
-let canvas!:        HTMLCanvasElement
-let win_w           = 0
-let win_h           = 0
-let scene2d!:       Scene2D
-let faceMesh!:      FaceMeshRenderer
-let hatRend!:       HatRenderer
-let bodyRend!:      BodyRenderer
-let camtex!:        CamTexObj
-let imgtex!:        TexObj
-let maskMgr!:       MaskManager
-let stats!:         Stats
-let facemesh_ready       = false
-let facemesh_model:      FacemeshModel | undefined
-let face_cache:          FacemeshFace[] = []
-let face_frame_count     = 0
-let prev_time_ms         = 0
+let canvas!:         HTMLCanvasElement
+let canvasWidth      = 0
+let canvasHeight     = 0
+let scene2d!:        Scene2D
+let faceMesh!:       FaceMeshRenderer
+let hatRenderer!:    HatRenderer
+let bodyRenderer!:   BodyRenderer
+let camtex!:         CamTexObj
+let imgtex!:         TexObj
+let maskMgr!:        MaskManager
+let stats!:          Stats
+let modelReady       = false
+let facemeshModel:   FacemeshModel | undefined
+let detectedFaces:   FacemeshFace[] = []
+let frameCount       = 0
 
 const canvasEl  = ref<HTMLCanvasElement | null>(null)
-const timingEl  = ref<HTMLElement | null>(null)
 const spinnerEl = ref<HTMLElement | null>(null)
 
 async function render (): Promise<void>
 {
-    const cur_time_ms = performance.now()
-    const interval_ms = cur_time_ms - prev_time_ms
-    prev_time_ms      = cur_time_ms
-
     stats.begin()
 
     /* resize canvas if needed */
     {
-        const display_w = canvas.clientWidth
-        const display_h = canvas.clientHeight
-        if (canvas.width !== display_w || canvas.height !== display_h) {
-            canvas.width  = display_w
-            canvas.height = display_h
-            scene2d.resize(display_w, display_h)
+        const displayW = canvas.clientWidth
+        const displayH = canvas.clientHeight
+        if (canvas.width !== displayW || canvas.height !== displayH) {
+            canvas.width  = displayW
+            canvas.height = displayH
+            scene2d.resize(displayW, displayH)
         }
-        win_w = canvas.width
-        win_h = canvas.height
+        canvasWidth  = canvas.width
+        canvasHeight = canvas.height
     }
-
 
     /* --------------------------------------- *
      *  Update Mask (if needed)
      * --------------------------------------- */
-    let mask_updated = false
-    if (facemesh_ready && facemesh_model) {
-        mask_updated = await maskMgr.update(facemesh_model)
+    let maskUpdated = false
+    if (modelReady && facemeshModel) {
+        maskUpdated = await maskMgr.update(facemeshModel)
         scene2d.reset()
     }
 
-
-    /* source dimensions + face-detection input (camera); bg.jpg used for display */
-    let src_w:     number = imgtex.image.width  || 800
-    let src_h:     number = imgtex.image.height || 800
+    /* source dimensions + face-detection input */
+    let sourceWidth:  number = imgtex.image.width  || 800
+    let sourceHeight: number = imgtex.image.height || 800
     let faceInput: HTMLImageElement | HTMLVideoElement = imgtex.image
 
     if (camtex.ready) {
         camtex.texture.needsUpdate = true
-        src_w     = camtex.video.videoWidth
-        src_h     = camtex.video.videoHeight
-        faceInput = camtex.video
+        sourceWidth  = camtex.video.videoWidth
+        sourceHeight = camtex.video.videoHeight
+        faceInput    = camtex.video
     }
 
-
     /* --------------------------------------- *
-     *  invoke TF.js (Facemesh)
+     *  Invoke TF.js (Facemesh)
      * --------------------------------------- */
-    const srctex_region = calc_size_to_fit(src_w, src_h, win_w, win_h)
-    let time_invoke0    = 0
+    const sourceRegion = calc_size_to_fit(sourceWidth, sourceHeight, canvasWidth, canvasHeight)
 
-    if (facemesh_ready && facemesh_model && (mask_updated || face_frame_count++ % FACE_DETECT_INTERVAL === 0)) {
-        const t0      = performance.now()
-        const num_rep = mask_updated ? 2 : 1
-        for (let i = 0; i < num_rep; i++)
-            face_cache = await facemesh_model.estimateFaces({ input: faceInput })
-        time_invoke0 = performance.now() - t0
+    if (modelReady && facemeshModel && (maskUpdated || frameCount++ % FACE_DETECT_INTERVAL === 0)) {
+        const repeatCount = maskUpdated ? 2 : 1
+        for (let i = 0; i < repeatCount; i++)
+            detectedFaces = await facemeshModel.estimateFaces({ input: faceInput })
     }
 
-
     /* --------------------------------------- *
-     *  render scene  (single Three.js pass)
+     *  Render scene  (single Three.js pass)
      * --------------------------------------- */
     scene2d.clear()
-    faceMesh.reset()
-    bodyRend.reset()
-    hatRend.reset()
+    scene2d.drawBackground(imgtex.texture, 0, 0, canvasWidth, canvasHeight, false)
 
-    scene2d.drawBackground(imgtex.texture, 0, 0, win_w, win_h, false)
+    const maskColor: Color4 = [1.0, 1.0, 1.0, MASK_ALPHA]
 
-    /* body, face warp, hat */
-    const mask_color: Color4 = [1.0, 1.0, 1.0, MASK_ALPHA]
-
-    if (face_cache.length > 0 && maskMgr.predictions.length > 0) {
-        const kp      = face_cache[0]!.scaledMesh
-        const mask_kp = maskMgr.predictions[0]!.scaledMesh
-        bodyRend.draw(kp, src_w, srctex_region)
-        for (const face of face_cache)
-            faceMesh.draw(face.scaledMesh, mask_kp, src_w, srctex_region, maskMgr.image, mask_color, maskMgr.texture)
-        hatRend.draw(kp, src_w, srctex_region)
+    if (detectedFaces.length > 0 && maskMgr.predictions.length > 0) {
+        const primaryLandmarks = detectedFaces[0]!.scaledMesh
+        const maskLandmarks    = maskMgr.predictions[0]!.scaledMesh
+        bodyRenderer.draw(primaryLandmarks, sourceWidth, sourceRegion)
+        for (const face of detectedFaces)
+            faceMesh.draw(face.scaledMesh, maskLandmarks, sourceWidth, sourceRegion, maskMgr.image, maskColor, maskMgr.texture)
+        hatRenderer.draw(primaryLandmarks, sourceWidth, sourceRegion)
     }
 
     scene2d.render()
-
-    timingEl.value!.innerHTML =
-        `Interval: ${interval_ms.toFixed(1)} ms<br>TF.js: ${time_invoke0.toFixed(1)} ms`
-
     stats.end()
     requestAnimationFrame(render)
 }
 
 onMounted(async () =>
 {
-    canvas   = canvasEl.value!
+    canvas = canvasEl.value!
     const gl = canvas.getContext('webgl2')
     if (!gl) {
         alert('Failed to initialize WebGL.')
         return
     }
 
-    win_w    = canvas.clientWidth
-    win_h    = canvas.clientHeight
-    scene2d  = new Scene2D(canvas, gl, win_w, win_h)
-    faceMesh  = new FaceMeshRenderer(scene2d)
-    bodyRend  = new BodyRenderer('./assets/shirt.jpg', scene2d)
-    hatRend   = new HatRenderer('./assets/tut.glb', scene2d)
-    camtex    = TextureFactory.fromCamera()
-    imgtex    = TextureFactory.fromUrl('assets/egypt.png')
-    maskMgr   = new MaskManager('./assets/mask/khamun.jpg', scene2d)
+    canvasWidth  = canvas.clientWidth
+    canvasHeight = canvas.clientHeight
+    scene2d      = new Scene2D(canvas, gl, canvasWidth, canvasHeight)
+    faceMesh     = new FaceMeshRenderer(scene2d)
+    bodyRenderer = new BodyRenderer('./assets/body/shirt.jpg', scene2d)
+    hatRenderer  = new HatRenderer('./assets/head/tut.glb', scene2d)
+    camtex       = TextureFactory.fromCamera()
+    imgtex       = TextureFactory.fromUrl('assets/egypt.png')
+    maskMgr      = new MaskManager('./assets/mask/khamun.jpg', scene2d)
 
     canvas.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault()
-        if (e.dataTransfer?.files[0]){
+        if (e.dataTransfer?.files[0])
             maskMgr.queueDrop(e.dataTransfer.files[0])
-        }
     })
 
     stats = new Stats()
@@ -179,31 +149,10 @@ onMounted(async () =>
     const model = await window.faceLandmarksDetection.load(
         window.faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
     )
-    facemesh_ready = true
-    facemesh_model = model
+    modelReady    = true
+    facemeshModel = model
 
     spinnerEl.value!.classList.add('loaded')
-    prev_time_ms = performance.now()
     void render()
 })
 </script>
-
-
-<style scoped>
-#canvas-overlay {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-  font-family: monospace;
-  font-size: 13px;
-  color: cyan;
-}
-
-#timing-info {
-  position: absolute;
-  top: 10px; left: 10px;
-  line-height: 22px;
-  text-shadow: 1px 1px 2px black;
-}
-</style>

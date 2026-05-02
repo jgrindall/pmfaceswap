@@ -38,7 +38,7 @@ export function calc_size_to_fit (srcWidth: number, srcHeight: number, winWidth:
         scale         = winHeight / srcHeight
         displayWidth  = scale * srcWidth
         displayHeight = scale * srcHeight
-        offsetX       = (winWidth - displayWidth) * 0.5
+        offsetX       = (winWidth - displayWidth) / 2
         offsetY       = 0
     }
     else {
@@ -46,7 +46,7 @@ export function calc_size_to_fit (srcWidth: number, srcHeight: number, winWidth:
         displayWidth  = scale * srcWidth
         displayHeight = scale * srcHeight
         offsetX       = 0
-        offsetY       = (winHeight - displayHeight) * 0.5
+        offsetY       = (winHeight - displayHeight) / 2
     }
 
     return {

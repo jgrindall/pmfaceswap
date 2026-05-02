@@ -41,10 +41,6 @@ export class BodyRenderer
         })
     }
 
-    public reset (): void { 
-        this.mesh.visible = false 
-    }
-
     public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void{
         if (!this.ready){
             return

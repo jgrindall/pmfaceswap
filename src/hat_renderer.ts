@@ -64,12 +64,6 @@ export class HatRenderer
         })
     }
 
-    public reset (): void {
-        if (this.pivot){
-            this.pivot.visible = false
-        }
-    }
-
     private debugLogged = false
 
     public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void{
