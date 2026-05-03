@@ -2,6 +2,7 @@ import * as THREE from 'three'
 import type { RendererManager } from './RendererManager.ts'
 import { RENDER_ORDER_BODY } from './RendererManager.ts'
 import type { SizeRegion } from './Utils.ts'
+import gsap from 'gsap';
 
 const IDX_CHIN  = 152
 const IDX_TOP   = 10
@@ -11,9 +12,14 @@ const IDX_R_EAR = 454
 /* Skip body repositioning when chin moves less than this many pixels */
 const MOVE_THRESHOLD = 8
 
+const BODY_WIDTH_RELATIVE_TO_HEAD = 6;
+const BODY_HEIGHT_RELATIVE_TO_HEAD = 9;
+const BODY_OFFSET_Y_RELATIVE_TO_HEAD = -1.33;
+const BODY_OFFSET_X_RELATIVE_TO_HEAD = -0.333;
+
 export class BodyRenderer {
-    private material:        THREE.MeshBasicMaterial
-    private mesh:       THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
+    private material: THREE.MeshBasicMaterial
+    private mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>
     private ready       = false
     private prevChinX   = -9999
     private prevChinY   = -9999
@@ -41,11 +47,19 @@ export class BodyRenderer {
         new THREE.TextureLoader().load(url, onLoad)
     }
 
+    private lerpTo(){
+
+    }
+
     public draw (landmarks: FaceLandmark[], sourceWidth: number, region: SizeRegion): void{
         if (!this.ready){
             return
         }
-        const { scale, offsetX, offsetY } = region
+        const {
+            scale,
+            offsetX,
+            offsetY
+        } = region
 
         const chin    = landmarks[IDX_CHIN]!
         const top     = landmarks[IDX_TOP]!
@@ -56,18 +70,36 @@ export class BodyRenderer {
         const chinScreenY = chin[1] * scale + offsetY
 
         /* skip update when face hasn't moved much — keeps body stable */
-        if (Math.hypot(chinScreenX - this.prevChinX, chinScreenY - this.prevChinY) < MOVE_THRESHOLD && this.mesh.visible) return
+        if (Math.hypot(chinScreenX - this.prevChinX, chinScreenY - this.prevChinY) < MOVE_THRESHOLD && this.mesh.visible){
+            return
+        }       
+
         this.prevChinX = chinScreenX
         this.prevChinY = chinScreenY
 
         const faceWidthPx  = Math.abs(rightEar[0] - leftEar[0]) * scale
         const faceHeightPx = (chin[1] - top[1]) * scale
 
-        const bodyWidth   = faceWidthPx * 2.0
-        const bodyHeight  = faceHeightPx * 2.5
-        const bodyCenterY = chinScreenY + faceHeightPx * 0.3 + bodyHeight * 0.5
+        const bodyWidth   = faceWidthPx * BODY_WIDTH_RELATIVE_TO_HEAD
+        const bodyHeight  = faceHeightPx * BODY_HEIGHT_RELATIVE_TO_HEAD
+        const bodyCenterY = chinScreenY + faceHeightPx * BODY_OFFSET_Y_RELATIVE_TO_HEAD + bodyHeight * 0.5
+        const bodyCenterX = chinScreenX + faceWidthPx * BODY_OFFSET_X_RELATIVE_TO_HEAD
 
-        this.mesh.position.set(chinScreenX, bodyCenterY, 0)
-        this.mesh.scale.set(bodyWidth, bodyHeight, 1)
+        gsap.to(this.mesh.position, {
+            duration: 0.25,
+            x: bodyCenterX,
+            y: bodyCenterY,
+            ease: "power2.out"
+        });
+
+        gsap.to(this.mesh.scale, {
+            duration: 0.25,
+            x: bodyWidth,
+            y: bodyHeight,
+            ease: "power2.out"
+        });
+
+        //this.mesh.position.set(bodyCenterX, bodyCenterY, 0)
+        //this.mesh.scale.set(bodyWidth, bodyHeight, 1)
     }
 }

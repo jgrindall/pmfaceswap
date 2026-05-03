@@ -44,9 +44,8 @@ export class RendererManager {
 
         this.bg = new BackgroundManager(this.scene)
 
-        /* lights needed by MeshStandardMaterial (used by GLB models) */
-        this.scene.add(new THREE.AmbientLight(0xffffff, 1.0))
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8)
+        this.scene.add(new THREE.AmbientLight(0xffffff, 1))
+        const dirLight = new THREE.DirectionalLight(0xffffff, 1)
         dirLight.position.set(0, -1, 1)
         this.scene.add(dirLight)
     }

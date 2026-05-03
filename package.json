@@ -12,6 +12,7 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
     "pinia": "^3.0.4",
     "stats.js": "^0.17.0",
     "three": "^0.184.0",

@@ -22,7 +22,8 @@
       "Bash(echo \"exit: $?\")",
       "Bash(node -e ' *)",
       "Bash(node -e \"const pkg = require\\('./node_modules/three/package.json'\\); console.log\\(pkg.version\\)\")",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(xargs ls *)"
     ],
     "additionalDirectories": [
       "c:\\workspace\\pmfaceswap\\src",

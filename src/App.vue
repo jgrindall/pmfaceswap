@@ -4,9 +4,6 @@
     </h1>
     <canvas ref="canvasEl" width="800" height="800" @dragover.prevent>
     </canvas>
-    <h1>
-        Drop a face image to change the face mask.
-    </h1>
 </template>
 
 <script setup lang="ts">
@@ -19,6 +16,7 @@ import { calculateSizeToFit } from './Utils.ts'
 import { MaskManager } from './MaskManager.ts'
 import { HeadRenderer } from './HeadRenderer.ts'
 import { BodyRenderer } from './BodyRenderer.ts'
+import { CameraFaceRenderer } from './CameraFaceRenderer.ts'
 import './css/loading1.css'
 
 /* 
@@ -31,8 +29,9 @@ let canvasWidth      = 0
 let canvasHeight     = 0
 let renderer!:       RendererManager
 let faceMesh!:       FaceMeshRenderer
-let headRenderer!:    HeadRenderer
-let bodyRenderer!:   BodyRenderer
+let headRenderer!:      HeadRenderer
+let bodyRenderer!:      BodyRenderer
+let cameraFaceRenderer!: CameraFaceRenderer
 let cameraTexture!:         CameraTextureObject
 let imageTexture!:         TextureObject
 let maskManager!:        MaskManager
@@ -84,7 +83,7 @@ async function render (): Promise<void>{
     if (modelReady && facemeshModel && (maskUpdated || frameCount++ % FACE_DETECT_INTERVAL === 0)) {
         const repeatCount = maskUpdated ? 2 : 1
         for (let i = 0; i < repeatCount; i++)
-            detectedFaces = await facemeshModel.estimateFaces({ input: faceInput })
+            detectedFaces = await facemeshModel.estimateFaces({ input: faceInput, returnTensors: false, predictIrises: false })
     }
 
     /* --------------------------------------- *
@@ -101,6 +100,11 @@ async function render (): Promise<void>{
         bodyRenderer.draw(primaryLandmarks, sourceWidth, sourceRegion)
         for (const face of detectedFaces){
             faceMesh.draw(face.scaledMesh, maskLandmarks, sourceWidth, sourceRegion, maskManager.image, maskColor, maskManager.texture)
+        }
+        if (cameraTexture.ready) {
+            cameraFaceRenderer.draw(primaryLandmarks, sourceWidth, sourceHeight, sourceRegion, cameraTexture.texture)
+        } else {
+            cameraFaceRenderer.hide()
         }
         headRenderer.draw(primaryLandmarks, sourceWidth, sourceRegion)
     }
@@ -122,14 +126,15 @@ onMounted(async () =>
     canvasWidth  = canvas.clientWidth
     canvasHeight = canvas.clientHeight
 
-    renderer      = new RendererManager(canvas, gl, canvasWidth, canvasHeight)
-    faceMesh     = new FaceMeshRenderer(renderer)
+    renderer = new RendererManager(canvas, gl, canvasWidth, canvasHeight)
+    faceMesh = new FaceMeshRenderer(renderer)
 
     bodyRenderer = new BodyRenderer(renderer)
-    bodyRenderer.load('./assets/body/shirt.jpg');
+    bodyRenderer.load('./assets/body/shirt.png');
     
-    headRenderer = new HeadRenderer(renderer);
-    headRenderer.load('./assets/head/tut.glb');
+    headRenderer        = new HeadRenderer(renderer)
+    cameraFaceRenderer  = new CameraFaceRenderer(renderer)
+    headRenderer.load('./assets/head/hair.glb');
     
     cameraTexture = TextureFactory.fromCamera();
     imageTexture = TextureFactory.fromUrl('assets/bg/egypt.png');
@@ -137,18 +142,13 @@ onMounted(async () =>
     maskManager = new MaskManager();
     maskManager.load('./assets/mask/rapunzel.webp');
 
-    canvas.addEventListener('drop', (e: DragEvent) => {
-        e.preventDefault()
-        if (e.dataTransfer?.files[0])
-            maskManager.queueDrop(e.dataTransfer.files[0])
-    })
-
     stats = new Stats()
     stats.showPanel(0)
     document.body.appendChild(stats.dom)
 
     const model = await window.faceLandmarksDetection.load(
-        window.faceLandmarksDetection.SupportedPackages.mediapipeFacemesh
+        window.faceLandmarksDetection.SupportedPackages.mediapipeFacemesh,
+        { maxFaces: 1 }
     )
     modelReady    = true
     facemeshModel = model

@@ -3,9 +3,8 @@ import * as THREE from 'three'
 import type { RendererManager, Color4 } from './RendererManager.ts'
 import { RENDER_ORDER_FACE } from './RendererManager.ts'
 import type { SizeRegion } from './Utils.ts'
-import { landmarkCentroid } from './Utils.ts'
+import { landmarkCentroid, fillBufferAttribute } from './Utils.ts'
 import faceTris            from './assets/face_mesh_tris.json'
-import faceContourIndices  from './assets/face_contour_idx.json'
 import vertexShaderSrc     from './shaders/facemesh.vert?raw'
 import fragmentShaderSrc   from './shaders/facemesh.frag?raw'
 
@@ -17,14 +16,6 @@ const IDX_FOREHEAD = 10
 const IDX_CHIN     = 152
 const IDX_L_EAR    = 234
 const IDX_R_EAR    = 454
-
-/* Build per-vertex alpha: 1.0 everywhere except the face-contour boundary
-   vertices (0.0) so the mask fades out at the edges instead of hard-clipping. */
-const makeEdgeAlphaAttr = (count: number, boundaryIndices: number[]): THREE.BufferAttribute => {
-    const alpha = new Float32Array(count).fill(1.0)
-    for (const i of boundaryIndices) alpha[i] = 0.0
-    return new THREE.BufferAttribute(alpha, 1)
-}
 
 type ShaderMaterialParams = NonNullable<ConstructorParameters<typeof THREE.ShaderMaterial>[0]>
 type Uniforms = ShaderMaterialParams["uniforms"]
@@ -70,7 +61,7 @@ export class FaceMeshRenderer
         const geometry = new THREE.BufferGeometry()
         geometry.setAttribute('position', this.positionAttr)
         geometry.setAttribute('uv',       this.uvAttr)
-        geometry.setAttribute('vtxalpha', makeEdgeAlphaAttr(LANDMARK_COUNT, faceContourIndices as number[]))
+        geometry.setAttribute('vtxalpha', fillBufferAttribute(LANDMARK_COUNT, 1))
         geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(faceTris), 1))
 
         this.mesh = new THREE.Mesh(geometry, this.material)

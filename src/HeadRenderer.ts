@@ -9,6 +9,11 @@ const IDX_CHIN     = 152
 const IDX_L_EAR    = 234
 const IDX_R_EAR    = 454
 
+const SCALE_FACTOR_RELATIVE_TO_FACE = 5.1
+const OFFSET_Y_RELATIVE_TO_FACE = 0.425
+const OFFSET_X_RELATIVE_TO_FACE = 0
+const OFFSET_Z_RELATIVE_TO_FACE = 0.5
+
 export class HeadRenderer{
     private pivot: THREE.Group | undefined
     private normScale  = 1
@@ -42,22 +47,13 @@ export class HeadRenderer{
                 if (obj instanceof THREE.Mesh) {
                     obj.renderOrder   = RENDER_ORDER_HAT
                     obj.frustumCulled = false
-                    const wasArray = Array.isArray(obj.material)
-                    const mats     = wasArray ? obj.material as THREE.Material[] : [obj.material as THREE.Material]
-                    const basics   = mats.map(m => {
-                        const src   = m as THREE.MeshStandardMaterial
-                        const basic = new THREE.MeshBasicMaterial({
-                            map:         src.map         ?? null,
-                            color:       src.color       ?? new THREE.Color(1, 1, 1),
-                            transparent: true,  /* must be true to join the transparent render pass where renderOrder is respected */
-                            opacity:     src.opacity     ?? 1.0,
-                            depthTest:   false,
-                            side:        THREE.DoubleSide,
-                        })
-                        m.dispose()
-                        return basic
-                    })
-                    obj.material = wasArray ? basics : basics[0]!
+                    const mats = Array.isArray(obj.material)
+                        ? obj.material as THREE.Material[]
+                        : [obj.material as THREE.Material]
+                    for (const m of mats) {
+                        m.depthTest   = false
+                        m.transparent = true
+                    }
                 }
             })
 
@@ -70,7 +66,11 @@ export class HeadRenderer{
         if (!this.pivot){
             return
         }
-        const { scale, offsetX, offsetY } = region
+        const { 
+            scale,
+            offsetX,
+            offsetY
+        } = region
 
         const toScreenX = (lm: FaceLandmark) => {
             return (sourceWidth - lm[0]) * scale + offsetX
@@ -86,7 +86,7 @@ export class HeadRenderer{
         const rightEar = landmarks[IDX_R_EAR]!
 
         const faceWidthPx = Math.abs(toScreenX(rightEar) - toScreenX(leftEar))
-        const hatSizePx   = faceWidthPx * 1.3
+        const hatSizePx   = faceWidthPx * SCALE_FACTOR_RELATIVE_TO_FACE
         const modelScale  = hatSizePx * this.normScale
 
         /* roll: angle of face-up vector in screen space */
@@ -97,9 +97,10 @@ export class HeadRenderer{
         /* yaw: negated because the Y-flip on the pivot inverts the apparent rotation direction */
         const yaw = (rightEar[2] - leftEar[2]) * 0.005
 
-        const posX = toScreenX(forehead)
-        const posY = toScreenY(forehead) - hatSizePx * 0.3
-        this.pivot.position.set(posX, posY, 0)
+        const posX = toScreenX(forehead) + hatSizePx * OFFSET_X_RELATIVE_TO_FACE
+        const posY = toScreenY(forehead) + hatSizePx * OFFSET_Y_RELATIVE_TO_FACE
+        const posZ = hatSizePx * OFFSET_Z_RELATIVE_TO_FACE
+        this.pivot.position.set(posX, posY, posZ)
         this.pivot.scale.set(modelScale, -modelScale, modelScale)   /* negative Y flips Y-up model into Y-down screen space */
         this.pivot.rotation.set(0, yaw, roll)
         this.pivot.visible = true

@@ -39,9 +39,7 @@ export class MaskManager{
 
         if (!this.initDone){
             for (let i = 0; i < NUM_ESTIMATION_RUNS; i++){
-                this.predictions = await model.estimateFaces({ 
-                    input: this.maskTextureObj!.image 
-                })
+                this.predictions = await model.estimateFaces({ input: this.maskTextureObj!.image, returnTensors: false, predictIrises: false })
             }
             this.initDone = true
             this.maskTextureObj!.texture.needsUpdate = true
@@ -50,9 +48,7 @@ export class MaskManager{
 
         if (this.updateRequired && this.maskTextureNextObj && this.maskTextureNextObj.image.width > 0){
             for (let i = 0; i < NUM_ESTIMATION_RUNS; i++){
-                this.predictions = await model.estimateFaces({ 
-                    input: this.maskTextureNextObj.image 
-                })
+                this.predictions = await model.estimateFaces({ input: this.maskTextureNextObj.image, returnTensors: false, predictIrises: false })
             }
             this.updateRequired = false
             this.maskTextureObj = this.maskTextureNextObj

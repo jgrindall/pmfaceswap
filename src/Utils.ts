@@ -1,3 +1,4 @@
+import * as THREE from 'three'
 export interface SizeRegion {
     width:        number  /* full canvas width */
     height:       number  /* full canvas height */
@@ -9,6 +10,11 @@ export interface SizeRegion {
     displayHeight: number /* image height after scaling to fit */
     
     scale:        number  /* uniform scale factor applied to source pixels */
+}
+
+export const fillBufferAttribute = (count: number, fillWith:number): THREE.BufferAttribute => {
+    const alpha = new Float32Array(count).fill(fillWith)
+    return new THREE.BufferAttribute(alpha, 1)
 }
 
 /** Returns the screen-space centroid of a landmark array, accounting for the

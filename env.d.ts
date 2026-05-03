@@ -20,16 +20,19 @@ interface FacemeshFace {
 }
 
 interface FacemeshModel {
-    estimateFaces(options: { 
-        input: HTMLImageElement | HTMLVideoElement 
+    estimateFaces(options: {
+        input:           HTMLImageElement | HTMLVideoElement
+        returnTensors?:  boolean
+        flipHorizontal?: boolean
+        predictIrises?:  boolean
     }): Promise<FacemeshFace[]>
 }
 
 interface FaceLandmarksDetectionLib {
     SupportedPackages: {
-        mediapipeFacemesh: string 
+        mediapipeFacemesh: string
     }
-    load(package: string): Promise<FacemeshModel>
+    load(pkg: string, config?: { maxFaces?: number }): Promise<FacemeshModel>
 }
 
 interface Window {
