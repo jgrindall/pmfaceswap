@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import type { RendererManager } from './Scene.ts'
-import { RENDER_ORDER_HAT } from './Scene.ts'
+import type { RendererManager } from './RendererManager.ts'
+import { RENDER_ORDER_HAT } from './RendererManager.ts'
 import type { SizeRegion } from './Utils.ts'
 
 const IDX_FOREHEAD = 10

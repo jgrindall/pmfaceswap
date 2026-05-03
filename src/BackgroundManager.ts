@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { RENDER_ORDER_BACKGROUND } from './Scene.ts'
+import { RENDER_ORDER_BACKGROUND } from './RendererManager.ts'
 
 export class BackgroundManager {
     private material: THREE.MeshBasicMaterial

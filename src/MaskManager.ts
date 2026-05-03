@@ -1,23 +1,28 @@
 import { TextureFactory } from './TextureFactory.ts'
-import type { TextureObject } from './Scene.ts'
+import type { TextureObject } from './RendererManager.ts'
 
 export class MaskManager{
 
-    private maskTextureObj: TextureObject
+    private maskTextureObj?: TextureObject
     private maskTextureNextObj: TextureObject | undefined
     public predictions: FacemeshFace[] = []
     private initDone     = false
     private updateRequired    = false
+
+    constructor (){
+        
+    }
+
+    public load(url: string){
+        this.maskTextureObj = TextureFactory.fromUrl(url)
+    }
+
     public get texture ():     TextureObject['texture']   { 
-        return this.maskTextureObj.texture
+        return this.maskTextureObj!.texture
     }
     
     public get image ():       TextureObject['image']     {
-        return this.maskTextureObj.image 
-    }
-
-    constructor (maskUrl: string){
-        this.maskTextureObj = TextureFactory.fromUrl(maskUrl)
+        return this.maskTextureObj!.image 
     }
 
     /** Queue a new mask image from a dropped file. Applied on the next update(). */
@@ -35,11 +40,11 @@ export class MaskManager{
         if (!this.initDone){
             for (let i = 0; i < NUM_ESTIMATION_RUNS; i++){
                 this.predictions = await model.estimateFaces({ 
-                    input: this.maskTextureObj.image 
+                    input: this.maskTextureObj!.image 
                 })
             }
             this.initDone = true
-            this.maskTextureObj.texture.needsUpdate = true
+            this.maskTextureObj!.texture.needsUpdate = true
             updated = true
         }
 

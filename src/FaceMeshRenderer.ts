@@ -1,7 +1,7 @@
 
 import * as THREE from 'three'
-import type { RendererManager, Color4 } from './Scene.ts'
-import { RENDER_ORDER_FACE } from './Scene.ts'
+import type { RendererManager, Color4 } from './RendererManager.ts'
+import { RENDER_ORDER_FACE } from './RendererManager.ts'
 import type { SizeRegion } from './Utils.ts'
 import { landmarkCentroid } from './Utils.ts'
 import faceTris            from './assets/face_mesh_tris.json'

@@ -12,7 +12,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import Stats from 'stats.js'
-import { RendererManager, type Color4, type TextureObject, type CameraTextureObject } from './Scene.ts'
+import { RendererManager, type Color4, type TextureObject, type CameraTextureObject } from './RendererManager.ts'
 import { FaceMeshRenderer } from './FaceMeshRenderer.ts'
 import { TextureFactory } from './TextureFactory.ts'
 import { calculateSizeToFit } from './Utils.ts'
@@ -128,13 +128,14 @@ onMounted(async () =>
     bodyRenderer = new BodyRenderer(renderer)
     bodyRenderer.load('./assets/body/shirt.jpg');
     
-    headRenderer = new HeadRenderer(renderer)
-    headRenderer.load('./assets/head/tut.glb')
+    headRenderer = new HeadRenderer(renderer);
+    headRenderer.load('./assets/head/tut.glb');
     
-    cameraTexture = TextureFactory.fromCamera()
-    imageTexture = TextureFactory.fromUrl('assets/bg/egypt.png')
+    cameraTexture = TextureFactory.fromCamera();
+    imageTexture = TextureFactory.fromUrl('assets/bg/egypt.png');
     
-    maskManager = new MaskManager('./assets/mask/rapunzel.webp')
+    maskManager = new MaskManager();
+    maskManager.load('./assets/mask/rapunzel.webp');
 
     canvas.addEventListener('drop', (e: DragEvent) => {
         e.preventDefault()

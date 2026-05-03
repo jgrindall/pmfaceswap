@@ -1,6 +1,6 @@
 import * as THREE from 'three'
-import type { RendererManager } from './Scene.ts'
-import { RENDER_ORDER_BODY } from './Scene.ts'
+import type { RendererManager } from './RendererManager.ts'
+import { RENDER_ORDER_BODY } from './RendererManager.ts'
 import type { SizeRegion } from './Utils.ts'
 
 const IDX_CHIN  = 152

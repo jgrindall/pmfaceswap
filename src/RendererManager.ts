@@ -19,6 +19,7 @@ export interface CameraTextureObject {
     texture: THREE.VideoTexture
     video: HTMLVideoElement
 }
+
 export class RendererManager {
     private renderer:   THREE.WebGLRenderer
     private scene:      THREE.Scene
