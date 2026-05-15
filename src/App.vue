@@ -33,7 +33,7 @@ let headRenderer!:      HeadRenderer
 let bodyRenderer!:      BodyRenderer
 let cameraFaceRenderer!: CameraFaceRenderer
 let cameraTexture!:         CameraTextureObject
-let imageTexture!:         TextureObject
+let backgroundTexture!:         TextureObject
 let maskManager!:        MaskManager
 let stats!:          Stats
 let modelReady       = false
@@ -64,11 +64,12 @@ async function render (): Promise<void>{
     }
 
     /* source dimensions + face-detection input */
-    let sourceWidth:  number = imageTexture.image.width  || 800
-    let sourceHeight: number = imageTexture.image.height || 800
-    let faceInput: HTMLImageElement | HTMLVideoElement = imageTexture.image
+    const cameraActive = cameraTexture.video.readyState >= 2
+    let sourceWidth:  number = backgroundTexture.image.width  || 800
+    let sourceHeight: number = backgroundTexture.image.height || 800
+    let faceInput: HTMLImageElement | HTMLVideoElement = backgroundTexture.image
 
-    if (cameraTexture.ready) {
+    if (cameraActive) {
         cameraTexture.texture.needsUpdate = true
         sourceWidth  = cameraTexture.video.videoWidth
         sourceHeight = cameraTexture.video.videoHeight
@@ -84,15 +85,16 @@ async function render (): Promise<void>{
         const repeatCount = maskUpdated ? 2 : 1
         for (let i = 0; i < repeatCount; i++)
             detectedFaces = await facemeshModel.estimateFaces({ input: faceInput, returnTensors: false, predictIrises: false })
+        renderer.reset()
     }
 
     /* --------------------------------------- *
      *  Render
      * --------------------------------------- */
     renderer.clear()
-    renderer.drawBackground(imageTexture.texture, 0, 0, canvasWidth, canvasHeight, false)
+    renderer.drawBackground(backgroundTexture.texture, 0, 0, canvasWidth, canvasHeight, false)
 
-    const maskColor: Color4 = [1, 1, 1, 1]
+    const maskColor: Color4 = [1, 1, 1, 0.75]
 
     if (detectedFaces.length > 0 && maskManager.predictions.length > 0) {
         const primaryLandmarks = detectedFaces[0]!.scaledMesh
@@ -101,7 +103,7 @@ async function render (): Promise<void>{
         for (const face of detectedFaces){
             faceMesh.draw(face.scaledMesh, maskLandmarks, sourceWidth, sourceRegion, maskManager.image, maskColor, maskManager.texture)
         }
-        if (cameraTexture.ready) {
+        if (cameraActive) {
             cameraFaceRenderer.draw(primaryLandmarks, sourceWidth, sourceHeight, sourceRegion, cameraTexture.texture)
         } else {
             cameraFaceRenderer.hide()
@@ -137,7 +139,7 @@ onMounted(async () =>
     headRenderer.load('./assets/head/hair.glb');
     
     cameraTexture = TextureFactory.fromCamera();
-    imageTexture = TextureFactory.fromUrl('assets/bg/egypt.png');
+    backgroundTexture = TextureFactory.fromUrl('assets/bg/egypt.png');
     
     maskManager = new MaskManager();
     maskManager.load('./assets/mask/rapunzel.webp');

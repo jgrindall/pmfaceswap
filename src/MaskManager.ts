@@ -38,6 +38,7 @@ export class MaskManager{
         const NUM_ESTIMATION_RUNS = 5
 
         if (!this.initDone){
+            if (!this.maskTextureObj!.ready) return false
             for (let i = 0; i < NUM_ESTIMATION_RUNS; i++){
                 this.predictions = await model.estimateFaces({ input: this.maskTextureObj!.image, returnTensors: false, predictIrises: false })
             }

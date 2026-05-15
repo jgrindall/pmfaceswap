@@ -61,17 +61,21 @@ export class FaceMeshRenderer
         const geometry = new THREE.BufferGeometry()
         geometry.setAttribute('position', this.positionAttr)
         geometry.setAttribute('uv',       this.uvAttr)
-        geometry.setAttribute('vtxalpha', fillBufferAttribute(LANDMARK_COUNT, 1))
+        geometry.setAttribute('vtxalpha', fillBufferAttribute(LANDMARK_COUNT, 0.5))
         geometry.setIndex(new THREE.BufferAttribute(new Uint16Array(faceTris), 1))
 
         this.mesh = new THREE.Mesh(geometry, this.material)
-        this.mesh.renderOrder = RENDER_ORDER_FACE
+        this.mesh.renderOrder = RENDER_ORDER_FACE + 0.5
         renderer.add(this.mesh)
 
         /* black oval sits just below the face mesh layer, filling any holes (e.g. mouth) */
         this.faceFill = new THREE.Mesh(
             new THREE.CircleGeometry(1, 64),
-            new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, depthTest: false })
+            new THREE.MeshBasicMaterial({
+                color: 0x000000,
+                transparent: true, 
+                depthTest: false
+            })
         )
         this.faceFill.renderOrder = RENDER_ORDER_FACE - 0.5
         this.faceFill.visible     = false
